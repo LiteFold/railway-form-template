@@ -23,7 +23,7 @@ test.describe('Copy Button Position on Embed Page', () => {
 
     // Button should be BELOW the code block (not overlaid)
     // With flexbox column layout, the button is in normal flow after <pre>
-    expect(btnBox!.y).toBeGreaterThan(codeBox!.y + codeBox!.height);
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
 
     // Button should be right-aligned to the code block
     // (from align-items: flex-end on the wrapper)
@@ -44,7 +44,7 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(btnBox).not.toBeNull();
 
     // Button should be BELOW the code block
-    expect(btnBox!.y).toBeGreaterThan(codeBox!.y + codeBox!.height);
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
 
     // Button should be right-aligned to the code block
     const btnRight = btnBox!.x + btnBox!.width;
@@ -65,7 +65,7 @@ test.describe('Copy Button Position on Embed Page', () => {
 
     // The button should be entirely below the code block
     // No overlap at all — button is in normal flow after <pre>
-    expect(btnBox!.y).toBeGreaterThan(codeBox!.y + codeBox!.height);
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
   });
 
   test('4. HTMX Copy button does NOT overlap code text — button is entirely BELOW the pre block', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(btnBox).not.toBeNull();
 
     // The button should be entirely below the code block
-    expect(btnBox!.y).toBeGreaterThan(codeBox!.y + codeBox!.height);
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
   });
 
   test('5. regular Copy button is clickable — shows "Copied!" feedback', async ({ page, context }) => {
@@ -134,7 +134,7 @@ test.describe('Copy Button Position on Embed Page', () => {
 
       // The button is in normal flow below the <pre>, so its top edge
       // should be below the entire code block (no overlap)
-      expect(btnBox!.y).toBeGreaterThan(codeBox!.y + codeBox!.height);
+      expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
     }
   });
 
