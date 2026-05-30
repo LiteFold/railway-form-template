@@ -45,7 +45,7 @@
                     View
                   </a>
                   <button
-                    class="btn btn-sm btn-ghost"
+                    class="btn btn-sm btn-ghost btn-toggle"
                     hx-get="/admin/submission/{{ sub['id'] }}/toggle"
                   >
                     {{ 'Mark read' if not sub['is_read'] else 'Mark unread' }}
