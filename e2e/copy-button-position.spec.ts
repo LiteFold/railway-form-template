@@ -10,7 +10,7 @@ test.describe('Copy Button Position on Embed Page', () => {
     await page.waitForSelector('#copy-btn-htmx');
   });
 
-  test('1. regular Copy button is positioned at bottom-right of its code block', async ({ page }) => {
+  test('1. regular Copy button is positioned below its code block, right-aligned', async ({ page }) => {
     const codeBlock = page.locator('#snippet-code');
     const copyBtn = page.locator('#copy-btn-regular');
 
@@ -21,27 +21,19 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(codeBox).not.toBeNull();
     expect(btnBox).not.toBeNull();
 
-    // Button should be near the bottom of the code block
-    // bottom: 8px means btn bottom edge ≈ code block bottom edge
-    const btnBottom = btnBox!.y + btnBox!.height;
-    const codeBottom = codeBox!.y + codeBox!.height;
-    const bottomDiff = codeBottom - btnBottom;
+    // Button should be BELOW the code block (not overlaid)
+    // With flexbox column layout, the button is in normal flow after <pre>
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
 
-    // Button bottom should be within 20px of code block bottom (8px gap + padding tolerance)
-    expect(bottomDiff).toBeGreaterThanOrEqual(0);
-    expect(bottomDiff).toBeLessThanOrEqual(25);
-
-    // Button should be near the right edge of the code block
+    // Button should be right-aligned to the code block
+    // (from align-items: flex-end on the wrapper)
     const btnRight = btnBox!.x + btnBox!.width;
     const codeRight = codeBox!.x + codeBox!.width;
-    const rightDiff = codeRight - btnRight;
-
-    // Button right edge should be within 20px of code block right edge (8px gap + padding tolerance)
-    expect(rightDiff).toBeGreaterThanOrEqual(0);
-    expect(rightDiff).toBeLessThanOrEqual(25);
+    const rightDiff = Math.abs(btnRight - codeRight);
+    expect(rightDiff).toBeLessThanOrEqual(5);
   });
 
-  test('2. HTMX Copy button is positioned at bottom-right of its code block', async ({ page }) => {
+  test('2. HTMX Copy button is positioned below its code block, right-aligned', async ({ page }) => {
     const codeBlock = page.locator('#snippet-htmx');
     const copyBtn = page.locator('#copy-btn-htmx');
 
@@ -51,24 +43,17 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(codeBox).not.toBeNull();
     expect(btnBox).not.toBeNull();
 
-    // Button should be near the bottom of the code block
-    const btnBottom = btnBox!.y + btnBox!.height;
-    const codeBottom = codeBox!.y + codeBox!.height;
-    const bottomDiff = codeBottom - btnBottom;
+    // Button should be BELOW the code block
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
 
-    expect(bottomDiff).toBeGreaterThanOrEqual(0);
-    expect(bottomDiff).toBeLessThanOrEqual(25);
-
-    // Button should be near the right edge
+    // Button should be right-aligned to the code block
     const btnRight = btnBox!.x + btnBox!.width;
     const codeRight = codeBox!.x + codeBox!.width;
-    const rightDiff = codeRight - btnRight;
-
-    expect(rightDiff).toBeGreaterThanOrEqual(0);
-    expect(rightDiff).toBeLessThanOrEqual(25);
+    const rightDiff = Math.abs(btnRight - codeRight);
+    expect(rightDiff).toBeLessThanOrEqual(5);
   });
 
-  test('3. regular Copy button does NOT overlap code text — button is BELOW the last line of code', async ({ page }) => {
+  test('3. regular Copy button does NOT overlap code text — button is entirely BELOW the pre block', async ({ page }) => {
     const codeBlock = page.locator('#snippet-code');
     const copyBtn = page.locator('#copy-btn-regular');
 
@@ -78,25 +63,12 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(codeBox).not.toBeNull();
     expect(btnBox).not.toBeNull();
 
-    // The button should be positioned at the bottom of the code block,
-    // so the button's top edge should be >= the code block's vertical midpoint
-    // (because "bottom-right" means it sits in the bottom area)
-    const codeMidY = codeBox!.y + codeBox!.height / 2;
-    const btnTopY = btnBox!.y;
-
-    // Button top should be in the bottom half of the code block
-    expect(btnTopY).toBeGreaterThanOrEqual(codeMidY);
-
-    // Button should not overlap the code text area vertically
-    // The button should not extend above code text (not overlaying content)
-    // With bottom: 8px, the button sits in the padding area at the bottom
-    // Code text occupies roughly the top portion of the pre block
-    // Let's check the button's top edge is in the bottom quarter of the code block
-    const codeBottomQuarter = codeBox!.y + codeBox!.height * 0.75;
-    expect(btnTopY).toBeGreaterThanOrEqual(codeBottomQuarter);
+    // The button should be entirely below the code block
+    // No overlap at all — button is in normal flow after <pre>
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
   });
 
-  test('4. HTMX Copy button does NOT overlap code text — button is BELOW the last line of code', async ({ page }) => {
+  test('4. HTMX Copy button does NOT overlap code text — button is entirely BELOW the pre block', async ({ page }) => {
     const codeBlock = page.locator('#snippet-htmx');
     const copyBtn = page.locator('#copy-btn-htmx');
 
@@ -106,10 +78,8 @@ test.describe('Copy Button Position on Embed Page', () => {
     expect(codeBox).not.toBeNull();
     expect(btnBox).not.toBeNull();
 
-    // Button top should be in the bottom quarter of the code block
-    const codeBottomQuarter = codeBox!.y + codeBox!.height * 0.75;
-    const btnTopY = btnBox!.y;
-    expect(btnTopY).toBeGreaterThanOrEqual(codeBottomQuarter);
+    // The button should be entirely below the code block
+    expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
   });
 
   test('5. regular Copy button is clickable — shows "Copied!" feedback', async ({ page, context }) => {
@@ -162,46 +132,36 @@ test.describe('Copy Button Position on Embed Page', () => {
       expect(codeBox).not.toBeNull();
       expect(btnBox).not.toBeNull();
 
-      // The button should be positioned at bottom-right, so its
-      // top edge should be below the code text area (bottom half of code block)
-      const codeVerticalMid = codeBox!.y + codeBox!.height / 2;
-      expect(btnBox!.y).toBeGreaterThanOrEqual(codeVerticalMid);
+      // The button is in normal flow below the <pre>, so its top edge
+      // should be below the entire code block (no overlap)
+      expect(btnBox!.y).toBeGreaterThanOrEqual(codeBox!.y + codeBox!.height);
     }
   });
 
-  test('8. both Copy buttons have correct CSS position properties', async ({ page }) => {
+  test('8. both Copy buttons have correct flexbox layout properties', async ({ page }) => {
     const btns = [
       { locator: page.locator('#copy-btn-regular'), name: 'regular' },
       { locator: page.locator('#copy-btn-htmx'), name: 'htmx' },
     ];
 
     for (const { locator, name } of btns) {
-      // Check the button's CSS position is absolute (from .code-block-wrapper)
+      // Button should be in normal flow (not absolute positioned)
       const position = await locator.evaluate(el => window.getComputedStyle(el).position);
-      expect(position).toBe('absolute');
+      expect(position).toBe('static');
 
-      // Check the parent .code-block-wrapper has position: relative
-      const parent = locator.locator('..'); // parent element
-      const parentPosition = await parent.evaluate(el => window.getComputedStyle(el).position);
-      expect(parentPosition).toBe('relative');
+      // Parent .code-block-wrapper should have display: flex
+      const parent = locator.locator('..');
+      const parentDisplay = await parent.evaluate(el => window.getComputedStyle(el).display);
+      expect(parentDisplay).toBe('flex');
 
-      // Verify computed bottom and right values
-      const bottom = await locator.evaluate(el => window.getComputedStyle(el).bottom);
-      const right = await locator.evaluate(el => window.getComputedStyle(el).right);
-
-      // bottom should be a pixel value (transformed from the original 8px)
-      const bottomPx = parseFloat(bottom);
-      expect(bottomPx).toBeGreaterThanOrEqual(0);
-      expect(bottomPx).toBeLessThanOrEqual(20);
-
-      // right should be a pixel value near 8px
-      const rightPx = parseFloat(right);
-      expect(rightPx).toBeGreaterThanOrEqual(0);
-      expect(rightPx).toBeLessThanOrEqual(20);
+      // Verify DOM order: <pre> should come before .copy-btn inside the wrapper
+      const wrapper = locator.locator('..');
+      const preCount = await wrapper.locator('pre').count();
+      expect(preCount).toBe(1);
     }
   });
 
-  test('9. buttons are inside .code-block-wrapper which has position:relative', async ({ page }) => {
+  test('9. .code-block-wrapper uses flexbox layout with column direction and items at flex-end', async ({ page }) => {
     // Verify the structural relationship
     const wrappers = page.locator('.code-block-wrapper');
     const count = await wrappers.count();
@@ -209,14 +169,35 @@ test.describe('Copy Button Position on Embed Page', () => {
 
     for (let i = 0; i < count; i++) {
       const wrapper = wrappers.nth(i);
-      const pos = await wrapper.evaluate(el => window.getComputedStyle(el).position);
-      expect(pos).toBe('relative');
+
+      // Check flexbox properties
+      const display = await wrapper.evaluate(el => window.getComputedStyle(el).display);
+      expect(display).toBe('flex');
+
+      const flexDirection = await wrapper.evaluate(el => window.getComputedStyle(el).flexDirection);
+      expect(flexDirection).toBe('column');
+
+      const alignItems = await wrapper.evaluate(el => window.getComputedStyle(el).alignItems);
+      expect(alignItems).toBe('flex-end');
 
       // Each wrapper should contain a <pre> and a .copy-btn
       const hasPre = await wrapper.locator('pre').count();
       const hasBtn = await wrapper.locator('.copy-btn').count();
       expect(hasPre).toBe(1);
       expect(hasBtn).toBe(1);
+
+      // Verify DOM order: <pre> comes before .copy-btn
+      const preEl = wrapper.locator('pre');
+      const btnEl = wrapper.locator('.copy-btn');
+      const preLoc = await preEl.evaluate(el => {
+        const parent = el.parentElement!;
+        return Array.from(parent.children).indexOf(el);
+      });
+      const btnLoc = await btnEl.evaluate(el => {
+        const parent = el.parentElement!;
+        return Array.from(parent.children).indexOf(el);
+      });
+      expect(btnLoc).toBeGreaterThan(preLoc);
     }
   });
 });
