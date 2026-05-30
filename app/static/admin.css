@@ -409,7 +409,9 @@ tr.unread:hover td { background: #e8f2ff; }
 }
 
 .code-block-wrapper {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 pre {
@@ -420,13 +422,9 @@ pre {
   font-size: 0.8125rem;
   overflow-x: auto;
   line-height: 1.6;
-  margin-bottom: 16px;
 }
 
 .copy-btn {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
   padding: 4px 12px;
   background: rgba(255,255,255,0.1);
   color: #e2e8f0;
