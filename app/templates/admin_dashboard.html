@@ -14,6 +14,17 @@
       border-radius: 6px;
       margin-bottom: 16px;
     }
+    .col-data { width: 40%; }
+    .col-actions { width: 200px; white-space: nowrap; }
+    .cell-data { max-width: 0; }
+    .data-preview {
+      max-height: 4.5em;
+      overflow-y: auto;
+      word-break: break-word;
+      font-size: 0.8125rem;
+      line-height: 1.4;
+    }
+    .cell-actions { white-space: nowrap; }
   </style>
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/htmx-ext-response-targets@2.0.4"></script>
@@ -25,6 +36,7 @@
       <ul>
         <li><a href="/admin" class="{% if not show_forms and not editing_form %}active{% endif %}">Dashboard</a></li>
         <li><a href="/admin/forms" class="{% if show_forms or editing_form is defined and editing_form %}active{% endif %}">Forms</a></li>
+        <li><a href="/">Embed</a></li>
       </ul>
       <div class="sidebar-footer">
         <a href="/admin/logout">Logout</a>
@@ -44,6 +56,45 @@
       {% elif submission_detail is defined and submission_detail %}
         {% include "admin_submission_detail.html" with context %}
       {% else %}
+        <div class="dashboard-header">
+          <div>
+            <h1>Submissions</h1>
+            <p>{{ total }} total submissions</p>
+          </div>
+          <div>
+            <a href="/admin/export" class="btn btn-ghost">Export CSV</a>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <select
+            name="form_slug"
+            hx-get="/admin/submissions"
+            hx-target="#submissions-table"
+            hx-include="[name='search']"
+            hx-vals='{"page": 1}'
+            class="form-filter"
+          >
+            <option value="">All forms</option>
+            {% if forms is defined %}
+              {% for form in forms %}
+                <option value="{{ form['slug'] }}" {% if form_slug is defined and form_slug == form['slug'] %}selected{% endif %}>{{ form['title'] }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <input
+            type="text"
+            name="search"
+            placeholder="Search submissions..."
+            hx-get="/admin/submissions"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#submissions-table"
+            hx-include="[name='form_slug']"
+            hx-vals='{"page": 1}'
+            value="{{ search if search is defined else '' }}"
+          >
+        </div>
+
         {% include "admin_submissions.html" with context %}
       {% endif %}
     </main>

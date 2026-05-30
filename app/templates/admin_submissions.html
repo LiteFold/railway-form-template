@@ -1,42 +1,3 @@
-<div class="dashboard-header">
-  <div>
-    <h1>Submissions</h1>
-    <p>{{ total }} total submissions</p>
-  </div>
-  <div>
-    <a href="/admin/export" class="btn btn-ghost">Export CSV</a>
-  </div>
-</div>
-
-<div class="search-bar">
-  <select
-    name="form_slug"
-    hx-get="/admin/submissions"
-    hx-target="#submissions-table"
-    hx-include="[name='search']"
-    hx-vals='{"page": 1}'
-    class="form-filter"
-  >
-    <option value="">All forms</option>
-    {% if forms is defined %}
-      {% for form in forms %}
-        <option value="{{ form['slug'] }}" {% if form_slug == form['slug'] %}selected{% endif %}>{{ form['title'] }}</option>
-      {% endfor %}
-    {% endif %}
-  </select>
-  <input
-    type="text"
-    name="search"
-    placeholder="Search submissions..."
-    hx-get="/admin/submissions"
-    hx-trigger="keyup changed delay:500ms"
-    hx-target="#submissions-table"
-    hx-include="[name='form_slug']"
-    hx-vals='{"page": 1}'
-    value="{{ search }}"
-  >
-</div>
-
 <div id="submissions-table">
   {% if submissions is defined %}
     <div class="table-wrapper">
@@ -45,9 +6,9 @@
           <tr>
             <th>Status</th>
             <th>Form</th>
-            <th>Data</th>
+            <th class="col-data">Data</th>
             <th>Date</th>
-            <th>Actions</th>
+            <th class="col-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -59,18 +20,20 @@
                 </span>
               </td>
               <td>{{ sub['form_slug'] }}</td>
-              <td>
-                {% set data = sub['data'] %}
-                {% if data is mapping %}
-                  {% for k, v in data.items() %}
-                    <strong>{{ k }}:</strong> {{ v }}<br>
-                  {% endfor %}
-                {% else %}
-                  {{ data }}
-                {% endif %}
+              <td class="cell-data">
+                <div class="data-preview">
+                  {% set data = sub['data'] %}
+                  {% if data is mapping %}
+                    {% for k, v in data.items() %}
+                      <strong>{{ k }}:</strong> {{ v }}<br>
+                    {% endfor %}
+                  {% else %}
+                    {{ data }}
+                  {% endif %}
+                </div>
               </td>
               <td>{{ sub['created_at'].strftime('%Y-%m-%d %H:%M') }}</td>
-              <td>
+              <td class="cell-actions">
                 <div class="table-actions">
                   <a
                     class="btn btn-sm btn-ghost"
@@ -82,7 +45,7 @@
                     View
                   </a>
                   <button
-                    class="btn btn-sm btn-ghost"
+                    class="btn btn-sm btn-ghost btn-toggle"
                     hx-get="/admin/submission/{{ sub['id'] }}/toggle"
                   >
                     {{ 'Mark read' if not sub['is_read'] else 'Mark unread' }}
