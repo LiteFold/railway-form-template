@@ -74,7 +74,7 @@ test.describe('API Endpoints', () => {
   test('POST /form/{slug} with empty body returns 400', async ({ request }) => {
     const resp = await request.post(BASE + '/form/contact', {
       data: '',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
     });
     expect(resp.status()).toBe(400);
   });
