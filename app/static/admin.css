@@ -206,6 +206,7 @@ a:hover { text-decoration: underline; }
 }
 
 .btn-sm { padding: 4px 10px; font-size: 0.8125rem; }
+.btn-toggle { min-width: 99px; text-align: center; }
 
 /* Table */
 .table-wrapper {
