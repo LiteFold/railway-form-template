@@ -206,7 +206,7 @@ a:hover { text-decoration: underline; }
 }
 
 .btn-sm { padding: 4px 10px; font-size: 0.8125rem; }
-.btn-toggle { min-width: 88px; text-align: center; }
+.btn-toggle { min-width: 99px; text-align: center; }
 
 /* Table */
 .table-wrapper {
@@ -285,20 +285,6 @@ tr.unread:hover td { background: #e8f2ff; }
 }
 
 .search-bar input:focus { border-color: #2563eb; }
-
-.form-filter {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  outline: none;
-  background: #fff;
-  cursor: pointer;
-}
-
-.form-filter:focus {
-  border-color: #2563eb;
-}
 
 /* Pagination */
 .pagination {
