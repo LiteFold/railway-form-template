@@ -45,11 +45,12 @@
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;</pre>
-        <button onclick="copySnippet()" class="copy-btn">Copy</button>
+        <button onclick="copySnippet()" id="copy-btn-regular" class="copy-btn">Copy</button>
       </div>
 
       <h2>HTMX Embed (submission without page reload)</h2>
-      <pre id="snippet-htmx">
+      <div class="code-block-wrapper">
+        <pre id="snippet-htmx">
 &lt;form
   hx-post="{{ request.base_url }}form/{{ forms[0]['slug'] }}"
   hx-target="#form-response"
@@ -78,6 +79,8 @@
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
 &lt;div id="form-response"&gt;&lt;/div&gt;</pre>
+        <button onclick="copyHtmxSnippet()" id="copy-btn-htmx" class="copy-btn">Copy</button>
+      </div>
     {% else %}
       <p>No forms found. Create one in the admin dashboard first.</p>
     {% endif %}
@@ -148,9 +151,24 @@
     function copySnippet() {
       var code = document.getElementById('snippet-code');
       navigator.clipboard.writeText(code.textContent).then(function() {
-        var btn = document.querySelector('.copy-btn');
+        var btn = document.getElementById('copy-btn-regular');
         btn.textContent = 'Copied!';
         setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+      }).catch(function(err) {
+        console.error('Copy failed:', err);
+        alert('Copy failed. Check clipboard permissions.');
+      });
+    }
+
+    function copyHtmxSnippet() {
+      var code = document.getElementById('snippet-htmx');
+      navigator.clipboard.writeText(code.textContent).then(function() {
+        var btn = document.getElementById('copy-btn-htmx');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+      }).catch(function(err) {
+        console.error('Copy failed:', err);
+        alert('Copy failed. Check clipboard permissions.');
       });
     }
 
