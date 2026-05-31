@@ -72,6 +72,12 @@ This template uses 4 services — all wired and ready on deploy:
 
 Environment variables are pre-configured with reference variables — `DATABASE_URL`, `REDIS_URL`, `CAP_ENDPOINT`, and `CAP_SECRET_KEY` are all wired automatically.
 
+## Live Example
+
+See Eary Form in action on a real site: [Contact Page](https://all-that-recipe.blogspot.com/p/contact.html)
+
+This Blogger blog embeds the form with CAPTCHA and accepts submissions live — no page reload, no third-party data sharing.
+
 ## Prerequisites
 
 - A [Railway](https://railway.app) account
