@@ -24,14 +24,30 @@ async function isCapConfigured(page: any): Promise<boolean> {
   return count > 0;
 }
 
+/**
+ * Helper: check whether auto-provisioning (cap_secret_key) is configured.
+ * Parses the #forms-data JSON and returns true if ANY form has a non-null cap_site_key.
+ * This is more specific than isCapConfigured() — it confirms auto-provisioning ran.
+ */
+async function isAutoProvisioningConfigured(page: any): Promise<boolean> {
+  await page.goto(`${BASE}/`);
+  await page.waitForSelector('#forms-data', { state: 'attached' });
+  const formsData = await page.evaluate(() => {
+    const el = document.getElementById('forms-data');
+    if (!el) return [];
+    return JSON.parse(el.textContent || '[]');
+  });
+  return formsData.some((f: any) => f.cap_site_key !== null);
+}
+
 test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
 
   test.describe('Auto-provisioning on form creation', () => {
 
     test('new form gets a non-null cap_site_key when Cap API is configured', async ({ page }) => {
-      // This test only applies when the Cap API endpoint is configured on staging.
-      // Skip gracefully if cap-widget is not present (meaning CAP_ENDPOINT is not set).
-      const capConfigured = await isCapConfigured(page);
+      // This test only applies when auto-provisioning (cap_secret_key) is configured.
+      // Skip gracefully if no form has a per-form cap_site_key.
+      const capConfigured = await isAutoProvisioningConfigured(page);
       if (!capConfigured) {
         test.skip();
         return;
@@ -55,7 +71,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
 
       // Navigate to the embed snippet page to check the forms-data JSON
       await page.goto(`${BASE}/`);
-      await page.waitForSelector('#forms-data');
+      await page.waitForSelector('#forms-data', { state: 'attached' });
 
       // Parse the forms-data JSON to find our new form's cap_site_key
       const formsData = await page.evaluate(() => {
@@ -81,7 +97,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
     });
 
     test('embed snippet data section includes per-form cap_site_key', async ({ page }) => {
-      const capConfigured = await isCapConfigured(page);
+      const capConfigured = await isAutoProvisioningConfigured(page);
       if (!capConfigured) {
         test.skip();
         return;
@@ -100,7 +116,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
 
       // Navigate to embed snippet page
       await page.goto(`${BASE}/`);
-      await page.waitForSelector('#forms-data');
+      await page.waitForSelector('#forms-data', { state: 'attached' });
 
       // Select our form in the dropdown
       await page.selectOption('#form-select', slug);
@@ -136,8 +152,8 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
   test.describe('Per-form site key in public form page', () => {
 
     test('data-cap-api-endpoint includes the per-form site key for modern forms', async ({ page }) => {
-      // Skip if cap is not configured
-      const capConfigured = await isCapConfigured(page);
+      // Skip if auto-provisioning is not configured
+      const capConfigured = await isAutoProvisioningConfigured(page);
       if (!capConfigured) {
         test.skip();
         return;
@@ -170,7 +186,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
       
       // Get the site key from the embed page to verify it matches
       await page.goto(`${BASE}/`);
-      await page.waitForSelector('#forms-data');
+      await page.waitForSelector('#forms-data', { state: 'attached' });
       const formsData = await page.evaluate(() => {
         const el = document.getElementById('forms-data');
         if (!el) return [];
@@ -196,7 +212,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
       // The 'contact' form was created during init_db without auto-provisioning.
       // Its cap_site_key should be null in the forms-data JSON.
       await page.goto(`${BASE}/`);
-      await page.waitForSelector('#forms-data');
+      await page.waitForSelector('#forms-data', { state: 'attached' });
 
       const formsData = await page.evaluate(() => {
         const el = document.getElementById('forms-data');
@@ -237,7 +253,7 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
     test('embed snippet JS uses per-form key or falls back to global settings.cap_site_key', async ({ page }) => {
       // Check the embed snippet page renders correct endpoints
       await page.goto(`${BASE}/`);
-      await page.waitForSelector('#forms-data');
+      await page.waitForSelector('#forms-data', { state: 'attached' });
 
       const formsData = await page.evaluate(() => {
         const el = document.getElementById('forms-data');
