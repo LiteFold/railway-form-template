@@ -173,7 +173,7 @@ async def submit_form(request: Request, slug: str):
         raise HTTPException(status_code=400, detail="Unexpected field detected")
 
     # Fix 1 (continued): Check captcha/honeypot BEFORE popping system fields
-    captcha_ok, captcha_err = await verify_captcha(request, data)
+    captcha_ok, captcha_err = await verify_captcha(request, data, form_def.get("cap_site_secret"))
     if not captcha_ok:
         if _wants_html(request):
             msg = captcha_err or "CAPTCHA verification failed"
