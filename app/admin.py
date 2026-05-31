@@ -12,6 +12,7 @@ from app.templates_ import TemplateResponse
 import asyncpg
 from app.config import settings
 from app.forms import create_form, delete_form, get_form, get_form_by_slug, get_forms, update_form
+from app.rate_limit import check_rate_limit
 
 router = APIRouter()
 
@@ -54,6 +55,18 @@ async def login_page(request: Request):
 
 @router.post("/login")
 async def login(request: Request, password: str = Form(...)):
+    pool = request.app.state.pool
+    ip = request.client.host if request.client else "unknown"
+
+    # Rate limit login attempts
+    if pool:
+        allowed = await check_rate_limit(pool, ip, prefix="login:")
+        if not allowed:
+            return await TemplateResponse(
+                "admin_login.html",
+                {"request": request, "error": "Too many login attempts. Try again later."},
+            )
+
     if settings.admin_password is None:
         request.session["authenticated"] = True
         request.session["warning"] = "ADMIN_PASSWORD not set — using default auth"
