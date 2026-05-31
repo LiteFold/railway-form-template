@@ -315,7 +315,15 @@ async def create_form_route(
     try:
         await create_form(pool, slug, title, fields)
     except asyncpg.exceptions.UniqueViolationError:
-        return HTMLResponse(status_code=400, content="A form with this slug already exists.")
+        # Return the form editor with the submitted data preserved
+        return await TemplateResponse(
+            "admin_dashboard.html",
+            {
+                "request": request,
+                "editing_form": {"slug": slug, "title": title, "fields": fields},
+                "slug_error": f"A form with slug '{slug}' already exists. Please choose a different slug.",
+            },
+        )
     # Return the form list directly instead of HX-Redirect to avoid race conditions
     # with HTMX 2.x redirect handling
     forms = await get_forms(pool)
