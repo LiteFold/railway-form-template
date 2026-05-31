@@ -319,7 +319,7 @@ async def create_form_route(
         pool = request.app.state.pool
         forms = await get_forms(pool) if pool else []
         return await TemplateResponse(
-            "admin_dashboard.html",
+            "admin_forms.html",
             {
                 "request": request,
                 "editing_form": {"slug": slug, "title": title, "fields": fields},

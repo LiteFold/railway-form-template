@@ -13,6 +13,9 @@
     {% endif %}
       <label for="slug">Slug</label>
       <input type="text" name="slug" id="slug" value="{{ editing_form.get('slug', '') }}" required {{ 'readonly' if editing_form.get('id') }}>
+      {% if slug_error %}
+      <div style="color:#ef4444;font-size:0.8125rem;margin-top:4px;">{{ slug_error }}</div>
+      {% endif %}
 
       <label for="title">Title</label>
       <input type="text" name="title" id="title" value="{{ editing_form.get('title', 'Contact Form') }}" required>
