@@ -1,9 +1,6 @@
 import json
-import logging
 from typing import Optional
 import asyncpg
-
-logger = logging.getLogger(__name__)
 
 
 def _parse_form(row):
@@ -41,9 +38,6 @@ async def create_form(pool: asyncpg.Pool, slug: str, title: str, fields: list):
             slug, title, json.dumps(fields),
         )
         result = _parse_form(row)
-
-    from app.cap_site_key import auto_provision
-    await auto_provision(pool, slug)
 
     return result
 
