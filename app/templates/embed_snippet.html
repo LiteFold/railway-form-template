@@ -41,7 +41,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;</pre>
@@ -74,7 +74,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
@@ -123,7 +123,7 @@
     }
 
     function getCapSnippet() {
-      var endpoint = "{{ request.base_url }}cap-proxy/";
+      var endpoint = "{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}";
       return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n  <cap-widget required\n    data-cap-api-endpoint="' + endpoint + '">\n  <\/cap-widget>';
     }
 

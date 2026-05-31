@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     admin_password: Optional[str] = None
     cap_endpoint: Optional[str] = None
     cap_secret_key: Optional[str] = None
+    cap_site_key: Optional[str] = None
     captcha_mode: str = "auto"
     form_recipient_email: Optional[str] = None
     sendgrid_api_key: Optional[str] = None
