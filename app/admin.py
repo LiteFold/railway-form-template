@@ -252,7 +252,11 @@ async def delete_submission(request: Request, sub_id: str):
         return await require_pool(request)
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM submissions WHERE id = $1", sub_id)
-    return HTMLResponse(status_code=200, content="")
+        new_total = await conn.fetchval("SELECT COUNT(*) FROM submissions") or 0
+    return HTMLResponse(
+        content=f'<tr></tr><p id="total-count" hx-swap-oob="true">{new_total} total submissions</p>',
+        status_code=200,
+    )
 
 
 @router.get("/export")

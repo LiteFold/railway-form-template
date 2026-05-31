@@ -12,9 +12,9 @@
     <form method="post" action="/admin/forms" hx-post="/admin/forms" hx-target="main.content" hx-swap="innerHTML" hx-target-error="main.content">
     {% endif %}
       <label for="slug">Slug</label>
-      <input type="text" name="slug" id="slug" value="{{ editing_form.get('slug', '') }}" required {{ 'readonly' if editing_form.get('id') }}>
+      <input type="text" name="slug" id="slug" value="{{ editing_form.get('slug', '') }}" required {{ 'readonly' if editing_form.get('id') }} oninput="document.getElementById('slug-error').style.display='none'">
       {% if slug_error %}
-      <div style="color:#ef4444;font-size:0.8125rem;margin-top:4px;">{{ slug_error }}</div>
+      <div id="slug-error" style="color:#ef4444;font-size:0.8125rem;margin-top:4px;">{{ slug_error }}</div>
       {% endif %}
 
       <label for="title">Title</label>
