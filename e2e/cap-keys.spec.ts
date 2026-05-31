@@ -85,7 +85,7 @@ test.describe('Global Cap CAPTCHA Site Key', () => {
       await page.waitForTimeout(200);
 
       // The snippet should render without errors and use a valid endpoint
-      const snippetText = await page.locator('#snippet-code').textContent();
+      const snippetText = await page.locator('#snippet-htmx').textContent();
       expect(snippetText).toContain('cap-widget');
       expect(snippetText).toContain('data-cap-api-endpoint');
       expect(snippetText).toContain('/cap-proxy/');
@@ -117,7 +117,7 @@ test.describe('Global Cap CAPTCHA Site Key', () => {
       await page.waitForTimeout(200);
 
       // Both regular and HTMX snippets should render with cap-widget
-      const snippetText = await page.locator('#snippet-code').textContent();
+      const snippetText = await page.locator('#snippet-htmx').textContent();
       expect(snippetText).toContain('cap-widget');
       expect(snippetText).toContain('data-cap-api-endpoint');
 
@@ -225,13 +225,13 @@ test.describe('Global Cap CAPTCHA Site Key', () => {
       await page.waitForTimeout(200);
 
       // The snippet should not crash — it should render valid HTML
-      const snippetText = await page.locator('#snippet-code').textContent();
+      const snippetText = await page.locator('#snippet-htmx').textContent();
       expect(snippetText).toContain('cap-widget');
       expect(snippetText).toContain('data-cap-api-endpoint');
 
       // The endpoint should reference /cap-proxy/
       await page.waitForTimeout(100);
-      const epText = await page.locator('#snippet-code').textContent() || '';
+      const epText = await page.locator('#snippet-htmx').textContent() || '';
       expect(epText).toContain('/cap-proxy/');
     });
   });

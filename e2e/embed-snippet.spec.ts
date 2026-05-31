@@ -6,37 +6,17 @@ test.describe('Embed Snippet Copy Buttons', () => {
     await page.goto('/');
   });
 
-  test('both Copy buttons are visible on the page', async ({ page }) => {
-    await page.waitForSelector('#copy-btn-regular');
-    await page.waitForSelector('#copy-btn-htmx');
+  test('the Copy button is visible on the page', async ({ page }) => {
+    await page.waitForSelector('#copy-btn');
 
-    await expect(page.locator('#copy-btn-regular')).toBeVisible();
-    await expect(page.locator('#copy-btn-htmx')).toBeVisible();
+    await expect(page.locator('#copy-btn')).toBeVisible();
   });
 
-  test('regular Copy button shows "Copied!" and reverts to "Copy"', async ({ page, context }) => {
+  test('Copy button shows "Copied!" and reverts to "Copy"', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-write', 'clipboard-read']);
     await page.goto('/');
 
-    const btn = page.locator('#copy-btn-regular');
-    await expect(btn).toHaveText('Copy');
-
-    // Click the copy button
-    await btn.click();
-
-    // Text should change to "Copied!"
-    await expect(btn).toHaveText('Copied!');
-
-    // After 2.5s, it should revert to "Copy"
-    await page.waitForTimeout(2500);
-    await expect(btn).toHaveText('Copy');
-  });
-
-  test('HTMX Copy button shows "Copied!" and reverts to "Copy"', async ({ page, context }) => {
-    await context.grantPermissions(['clipboard-write', 'clipboard-read']);
-    await page.goto('/');
-
-    const btn = page.locator('#copy-btn-htmx');
+    const btn = page.locator('#copy-btn');
     await expect(btn).toHaveText('Copy');
 
     // Click the copy button
@@ -59,13 +39,13 @@ test.describe('Embed Snippet Copy Buttons', () => {
     });
 
     await page.goto('/');
-    await page.waitForSelector('#copy-btn-regular');
+    await page.waitForSelector('#copy-btn');
     await page.waitForTimeout(500);
 
     expect(errors.length).toBe(0);
   });
 
-  test('no JS console errors when clicking both copy buttons', async ({ page, context }) => {
+  test('no JS console errors when clicking the copy button', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-write', 'clipboard-read']);
     await page.goto('/');
 
@@ -76,10 +56,8 @@ test.describe('Embed Snippet Copy Buttons', () => {
       }
     });
 
-    await page.waitForSelector('#copy-btn-regular');
-    await page.locator('#copy-btn-regular').click();
-    await page.waitForTimeout(500);
-    await page.locator('#copy-btn-htmx').click();
+    await page.waitForSelector('#copy-btn');
+    await page.locator('#copy-btn').click();
     await page.waitForTimeout(500);
 
     expect(errors.length).toBe(0);
