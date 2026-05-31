@@ -162,7 +162,6 @@
         html += '<div class="field-card-row">' + optsHtml + '</div>';
       }
       html += '<div class="field-card-row" style="justify-content:space-between">';
-      html += '<span style="font-size:0.75rem;color:#999">name: ' + (f.name||slugify(f.label||'field')) + '</span>';
       html += '<div class="field-card-actions">';
       if (i > 0) html += '<button data-action="move-up" data-field-idx="' + i + '">▲</button>';
       if (i < fields.length - 1) html += '<button data-action="move-down" data-field-idx="' + i + '">▼</button>';
