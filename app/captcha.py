@@ -55,6 +55,9 @@ def verify_honeypot(data: dict) -> bool:
 async def verify_captcha(request, data: dict, cap_secret_key: Optional[str] = None) -> tuple[bool, Optional[str]]:
     mode = settings.captcha_mode
 
+    if mode == "off":
+        return True, None
+
     if mode == "cap":
         token = data.get("cap_token", "")
         if not token:
