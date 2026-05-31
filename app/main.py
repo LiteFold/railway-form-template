@@ -40,6 +40,13 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+@app.middleware("http")
+async def enforce_https_scheme(request: Request, call_next):
+    if request.scope.get("scheme") == "http":
+        request.scope["scheme"] = "https"
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
