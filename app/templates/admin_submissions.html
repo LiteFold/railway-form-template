@@ -51,13 +51,14 @@
                     {{ 'Mark read' if not sub['is_read'] else 'Mark unread' }}
                   </button>
                   <button
-                    class="btn btn-sm btn-danger"
-                    hx-delete="/admin/submission/{{ sub['id'] }}"
-                    hx-target="closest tr"
-                    hx-swap="outerHTML swap:1s"
-                    hx-confirm="Delete this submission?"
+                      class="btn btn-sm btn-danger"
+                      hx-delete="/admin/submission/{{ sub['id'] }}"
+                      hx-target="closest tr"
+                      hx-swap="outerHTML swap:1s"
+                      hx-confirm="Delete this submission?"
+                      hx-vals='{"form_slug": "{{ form_slug }}"}'
                   >
-                    Delete
+                      Delete
                   </button>
                 </div>
               </td>
