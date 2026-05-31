@@ -80,8 +80,9 @@
 .field-card-row select:focus {
   border-color: #2563eb;
 }
-.field-card-row input[type="text"] { width: auto; min-width: 80px; max-width: 160px; }
+.field-card-row input[type="text"] { width: auto; min-width: 80px; max-width: 160px; padding: 4px 8px; }
 .field-card-row input[type="checkbox"] { width: auto; }
+.field-card-row label span { line-height: 29px; display: inline-block; }
 .field-card-actions {
    display: flex;
    gap: 4px;
@@ -150,7 +151,7 @@
         html += '<div class="field-card" data-field-idx="' + i + '">';
         // Row 1: Label + Required checkbox + action buttons
         html += '<div class="field-card-row">';
-        html += '<label>Label <input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></label>';
+        html += '<label><span>Label</span> <input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></label>';
         html += '<label><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label>';
         html += '<div class="field-card-actions">';
         if (i > 0) html += '<button data-action="move-up" data-field-idx="' + i + '">▲</button>';
@@ -173,7 +174,7 @@
         }
         // Row 4: Placeholder
         html += '<div class="field-card-row">';
-        html += '<label>Placeholder <input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></label>';
+        html += '<label><span>Placeholder</span> <input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></label>';
         html += '</div>';
         html += '</div>';
       }
