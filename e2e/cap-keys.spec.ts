@@ -274,18 +274,40 @@ test.describe('Per-Form Cap CAPTCHA Site Keys', () => {
       expect(snippetText).toContain('cap-widget');
       expect(snippetText).toContain('data-cap-api-endpoint');
       
-      // The JS getCapSnippet function should produce valid output
-      const generatedEndpoint = await page.evaluate(() => {
-        // Simulate what getCapSnippet does
+      // Actually call getCapSnippet with the contact form and validate fallback URL logic.
+      // The contact form has null cap_site_key (pre-feature), so the function should
+      // fall back to the global settings.cap_site_key when constructing the endpoint URL.
+      const result = await page.evaluate(() => {
         const forms = JSON.parse(document.getElementById('forms-data')!.textContent || '[]');
         const form = forms.find((f: any) => f.slug === 'contact');
-        const formKey = form && form.cap_site_key;
-        // The JS uses: formKey || "{{ settings.cap_site_key }}"
-        // Since settings is server-side, we need a different approach
-        // Just verify the JS function exists and runs without error
-        return typeof (window as any).getCapSnippet !== 'undefined';
+        const fn = (window as any).getCapSnippet;
+        if (typeof fn !== 'function') return null;
+        
+        // Call the function with the pre-feature form (null cap_site_key)
+        const html = fn(form);
+        
+        // Read the fallback key baked into the function source by the server-side template
+        const src = fn.toString();
+        const fallbackMatch = src.match(/formKey\s*\|\|\s*"([^"]*)"/);
+        const fallbackKey = fallbackMatch ? fallbackMatch[1] : '';
+        
+        // Extract the endpoint from the returned HTML snippet
+        const epMatch = html.match(/data-cap-api-endpoint="([^"]+)"/);
+        const endpoint = epMatch ? epMatch[1] : '';
+        
+        return { html, fallbackKey, endpoint };
       });
-      expect(generatedEndpoint).toBe(true);
+      
+      expect(result).not.toBeNull();
+      expect(result!.html).toContain('cap-widget');
+      expect(result!.html).toContain('data-cap-api-endpoint');
+      expect(result!.endpoint).toMatch(/\/cap-proxy\//);
+      
+      // Verify the fallback logic: since contactForm.cap_site_key is null,
+      // the endpoint should incorporate the global settings.cap_site_key
+      if (result!.fallbackKey) {
+        expect(result!.endpoint).toContain(result!.fallbackKey);
+      }
     });
   });
 
