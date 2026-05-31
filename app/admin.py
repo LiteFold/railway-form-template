@@ -240,7 +240,7 @@ async def submission_detail(request: Request, sub_id: str):
 
 
 @router.delete("/submission/{sub_id}")
-async def delete_submission(request: Request, sub_id: str):
+async def delete_submission(request: Request, sub_id: str, form_slug: str | None = None):
     auth_required(request)
     # Validate UUID format
     try:
@@ -252,7 +252,12 @@ async def delete_submission(request: Request, sub_id: str):
         return await require_pool(request)
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM submissions WHERE id = $1", sub_id)
-        new_total = await conn.fetchval("SELECT COUNT(*) FROM submissions") or 0
+        if form_slug:
+            new_total = await conn.fetchval(
+                "SELECT COUNT(*) FROM submissions WHERE form_slug = $1", form_slug
+            ) or 0
+        else:
+            new_total = await conn.fetchval("SELECT COUNT(*) FROM submissions") or 0
     return HTMLResponse(
         content=f'<tr></tr><p id="total-count" hx-swap-oob="true">{new_total} total submissions</p>',
         status_code=200,
