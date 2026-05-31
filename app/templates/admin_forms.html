@@ -83,10 +83,11 @@
 .field-card-row input[type="text"] { width: auto; min-width: 80px; max-width: 160px; }
 .field-card-row input[type="checkbox"] { width: auto; }
 .field-card-actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
+   display: flex;
+   gap: 4px;
+   align-items: center;
+   margin-left: auto;
+ }
 .field-card-actions button {
   padding: 2px 8px;
   font-size: 0.75rem;
@@ -136,41 +137,49 @@
     return -1;
   }
 
-  function render() {
-    var html = '';
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
+    function render() {
+      var html = '';
+      for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
 
-      var optsHtml = '';
-      if (f.type === 'select') {
-        var vals = (f.options || []).join(', ');
-        optsHtml = '<input type="text" class="field-options-input" value="' + vals.replace(/"/g, '&quot;') + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options">';
+        var optsHtml = '';
+        if (f.type === 'select') {
+          var vals = (f.options || []).join(', ');
+          optsHtml = '<input type="text" class="field-options-input" value="' + vals.replace(/"/g, '&quot;') + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options">';
+        }
+        html += '<div class="field-card" data-field-idx="' + i + '">';
+        // Row 1: Label + Required checkbox + action buttons
+        html += '<div class="field-card-row">';
+        html += '<label>Label <input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></label>';
+        html += '<label><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label>';
+        html += '<div class="field-card-actions">';
+        if (i > 0) html += '<button data-action="move-up" data-field-idx="' + i + '">▲</button>';
+        if (i < fields.length - 1) html += '<button data-action="move-down" data-field-idx="' + i + '">▼</button>';
+        html += '<button class="btn-del" data-action="delete" data-field-idx="' + i + '">✕</button>';
+        html += '</div>';
+        html += '</div>';
+        // Row 2: Type
+        html += '<div class="field-card-row">';
+        html += '<label>Type <select data-field-idx="' + i + '" data-field-key="type">';
+        var types = ['text','email','textarea','select','checkbox','tel','number','url'];
+        for (var t = 0; t < types.length; t++) {
+          html += '<option value="' + types[t] + '"' + (f.type === types[t] ? ' selected' : '') + '>' + types[t] + '</option>';
+        }
+        html += '</select></label>';
+        html += '</div>';
+        // Row 3 (conditional): options input for select type
+        if (optsHtml) {
+          html += '<div class="field-card-row">' + optsHtml + '</div>';
+        }
+        // Row 4: Placeholder
+        html += '<div class="field-card-row">';
+        html += '<label>Placeholder <input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></label>';
+        html += '</div>';
+        html += '</div>';
       }
-      html += '<div class="field-card" data-field-idx="' + i + '">';
-      html += '<div class="field-card-row">';
-      html += '<label>Label <input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></label>';
-      html += '<label>Type <select data-field-idx="' + i + '" data-field-key="type">';
-      var types = ['text','email','textarea','select','checkbox','tel','number','url'];
-      for (var t = 0; t < types.length; t++) {
-        html += '<option value="' + types[t] + '"' + (f.type === types[t] ? ' selected' : '') + '>' + types[t] + '</option>';
-      }
-      html += '</select></label>';
-      html += '<label><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label>';
-      html += '<label>Placeholder <input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></label>';
-      html += '</div>';
-      if (optsHtml) {
-        html += '<div class="field-card-row">' + optsHtml + '</div>';
-      }
-      html += '<div class="field-card-row" style="justify-content:space-between">';
-      html += '<div class="field-card-actions">';
-      if (i > 0) html += '<button data-action="move-up" data-field-idx="' + i + '">▲</button>';
-      if (i < fields.length - 1) html += '<button data-action="move-down" data-field-idx="' + i + '">▼</button>';
-      html += '<button class="btn-del" data-action="delete" data-field-idx="' + i + '">✕</button>';
-      html += '</div></div></div>';
+      container.innerHTML = html;
+      syncHidden();
     }
-    container.innerHTML = html;
-    syncHidden();
-  }
 
   // Event delegation: handle changes (select, checkbox, text blur)
   container.addEventListener('change', function(e) {
