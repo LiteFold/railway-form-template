@@ -19,36 +19,7 @@
         {% endfor %}
       </select>
 
-      <h2>Embed Code</h2>
-      <div class="code-block-wrapper">
-        <pre id="snippet-code">
-&lt;form action="{{ request.base_url }}form/{{ forms[0]['slug'] }}" method="post"&gt;
-{% for field in (forms[0].fields or []) %}
-  {% if field.type == 'textarea' %}
-  &lt;textarea name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}&gt;&lt;/textarea&gt;
-  {% elif field.type == 'select' %}
-  &lt;select name="{{ field.name }}"{% if field.required %} required{% endif %}&gt;
-    &lt;option value=""&gt;Select {{ field.label }}&lt;/option&gt;
-    {% for opt in field.options %}
-    &lt;option value="{{ opt }}"&gt;{{ opt }}&lt;/option&gt;
-    {% endfor %}
-  &lt;/select&gt;
-  {% elif field.type == 'checkbox' %}
-  &lt;label&gt;&lt;input type="checkbox" name="{{ field.name }}" value="yes"&gt; {{ field.label }}&lt;/label&gt;
-  {% else %}
-  &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}&gt;
-  {% endif %}
-{% endfor %}
-  &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
-  &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
-  &lt;/cap-widget&gt;
-  &lt;button type="submit"&gt;Send&lt;/button&gt;
-&lt;/form&gt;</pre>
-        <button onclick="copySnippet()" id="copy-btn-regular" class="copy-btn">Copy</button>
-      </div>
-
-      <h2>HTMX Embed (submission without page reload)</h2>
+      <h2>Embed Snippet</h2>
       <div class="code-block-wrapper">
         <pre id="snippet-htmx">
 &lt;form
@@ -67,9 +38,9 @@
     {% endfor %}
   &lt;/select&gt;
   {% elif field.type == 'checkbox' %}
-  &lt;label&gt;&lt;input type="checkbox" name="{{ field.name }}" value="yes"&gt; {{ field.label }}&lt;/label&gt;
+  &lt;label&gt;&lt;input type="checkbox" name="{{ field.name }}" value="yes" /&gt; {{ field.label }}&lt;/label&gt;
   {% else %}
-  &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}&gt;
+  &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %} /&gt;
   {% endif %}
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
@@ -79,7 +50,7 @@
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
 &lt;div id="form-response"&gt;&lt;/div&gt;</pre>
-        <button onclick="copyHtmxSnippet()" id="copy-btn-htmx" class="copy-btn">Copy</button>
+        <button onclick="copySnippet()" id="copy-btn" class="copy-btn">Copy</button>
       </div>
     {% else %}
       <p>No forms found. Create one in the admin dashboard first.</p>
@@ -116,9 +87,9 @@
           }).join('\n');
           return '  <select name="' + name + '"' + required + '>\n    <option value="">Select ' + label + '<\/option>\n' + opts + '\n  <\/select>';
         case 'checkbox':
-          return '  <label><input type="checkbox" name="' + name + '" value="yes"> ' + label + '<\/label>';
+          return '  <label><input type="checkbox" name="' + name + '" value="yes" /> ' + label + '<\/label>';
         default:
-          return '  <input type="' + field.type + '" name="' + name + '" placeholder="' + label + '"' + required + '>';
+          return '  <input type="' + field.type + '" name="' + name + '" placeholder="' + label + '"' + required + ' />';
       }
     }
 
@@ -145,29 +116,14 @@
       var fieldHtml = fields.map(renderField).join('\n');
       var cap = getCapSnippet(form);
 
-      var regularHtml = '<form action="' + base + 'form/' + slug + '" method="post">\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>';
-      document.getElementById('snippet-code').textContent = regularHtml;
-
       var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n<div id="form-response"><\/div>';
       document.getElementById('snippet-htmx').textContent = htmxHtml;
     }
 
     function copySnippet() {
-      var code = document.getElementById('snippet-code');
-      navigator.clipboard.writeText(code.textContent).then(function() {
-        var btn = document.getElementById('copy-btn-regular');
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
-      }).catch(function(err) {
-        console.error('Copy failed:', err);
-        alert('Copy failed. Check clipboard permissions.');
-      });
-    }
-
-    function copyHtmxSnippet() {
       var code = document.getElementById('snippet-htmx');
       navigator.clipboard.writeText(code.textContent).then(function() {
-        var btn = document.getElementById('copy-btn-htmx');
+        var btn = document.getElementById('copy-btn');
         btn.textContent = 'Copied!';
         setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
       }).catch(function(err) {

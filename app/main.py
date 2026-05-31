@@ -205,8 +205,16 @@ async def submit_form(request: Request, slug: str):
     if settings.form_recipient_email:
         await send_notification(name_val, email_val, submission_data.get("message", ""))
     if _wants_html(request):
+        redirect = form_def.get("redirect_url", "")
+        if redirect:
+            if request.headers.get("HX-Request") == "true":
+                return Response(status_code=200, headers={"HX-Redirect": redirect})
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=redirect, status_code=302)
+
+        success_msg = form_def.get("post_submit_message") or "Thank you! Your submission was received."
         return HTMLResponse(
-            '<div class="success">Thank you! Your submission was received.</div>'
+            f'<div class="success">{success_msg}</div>'
         )
     return JSONResponse(
         status_code=201,

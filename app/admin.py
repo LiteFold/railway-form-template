@@ -324,6 +324,8 @@ async def create_form_route(
     slug: str = Form(...),
     title: str = Form("Contact Form"),
     fields_json: str = Form("[]"),
+    post_submit_message: str = Form(""),
+    redirect_url: str = Form(""),
 ):
     auth_required(request)
     pool = request.app.state.pool
@@ -335,7 +337,7 @@ async def create_form_route(
     except json.JSONDecodeError as e:
         return HTMLResponse(status_code=400, content=f"Invalid fields JSON: {e}")
     try:
-        await create_form(pool, slug, title, fields)
+        await create_form(pool, slug, title, fields, post_submit_message, redirect_url)
     except asyncpg.exceptions.UniqueViolationError:
         # Return the form editor with the submitted data preserved
         pool = request.app.state.pool
@@ -344,7 +346,7 @@ async def create_form_route(
             "admin_forms.html",
             {
                 "request": request,
-                "editing_form": {"slug": slug, "title": title, "fields": fields},
+                "editing_form": {"slug": slug, "title": title, "fields": fields, "post_submit_message": post_submit_message, "redirect_url": redirect_url},
                 "forms": forms,
                 "slug_error": f"A form with slug '{slug}' already exists. Please choose a different slug.",
             },
@@ -375,6 +377,8 @@ async def update_form_route(
     form_id: str,
     title: str = Form("Contact Form"),
     fields_json: str = Form("[]"),
+    post_submit_message: str = Form(""),
+    redirect_url: str = Form(""),
 ):
     auth_required(request)
     pool = request.app.state.pool
@@ -386,7 +390,7 @@ async def update_form_route(
     except json.JSONDecodeError as e:
         return HTMLResponse(status_code=400, content=f"Invalid fields JSON: {e}")
     try:
-        await update_form(pool, form_id, title, fields)
+        await update_form(pool, form_id, title, fields, post_submit_message, redirect_url)
     except asyncpg.exceptions.UniqueViolationError:
         return HTMLResponse(status_code=400, content="A form with this slug already exists.")
     # Return the form list directly instead of HX-Redirect for consistency
