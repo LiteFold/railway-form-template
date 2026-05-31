@@ -55,7 +55,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 secret_key = settings.session_secret_key or secrets.token_hex(32)
-app.add_middleware(SessionMiddleware, secret_key=secret_key)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=secret_key,
+    https_only=True,
+    same_site="lax",
+)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(admin_router, prefix="/admin")
 @app.get("/", response_class=HTMLResponse)
