@@ -41,7 +41,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if forms[0].cap_site_key or settings.cap_site_key %}{{ forms[0].cap_site_key or settings.cap_site_key }}/{% endif %}"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;</pre>
@@ -74,7 +74,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if forms[0].cap_site_key or settings.cap_site_key %}{{ forms[0].cap_site_key or settings.cap_site_key }}/{% endif %}"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
@@ -93,8 +93,7 @@
     {
       "slug": {{ form.slug | tojson }},
       "title": {{ form.title | tojson }},
-      "fields": {{ form.fields | tojson }},
-      "cap_site_key": {{ form.cap_site_key | tojson }}
+      "fields": {{ form.fields | tojson }}
     }{% if not loop.last %},{% endif %}
     {%- endfor %}
   ]</script>
@@ -123,9 +122,8 @@
       }
     }
 
-    function getCapSnippet(form) {
-      var formKey = form && form.cap_site_key;
-      var siteKey = formKey || "{{ settings.cap_site_key }}";
+    function getCapSnippet(_form) {
+      var siteKey = "{{ settings.cap_site_key }}";
       var endpoint = "{{ request.base_url }}cap-proxy/";
       if (siteKey) {
         endpoint += siteKey + "/";
