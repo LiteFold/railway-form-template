@@ -156,6 +156,137 @@ test.describe('Admin Dashboard', () => {
     await expect(page.locator('h1')).toContainText('Submissions');
   });
 
+  test('total count updates after deleting a submission via UI', async ({ page }) => {
+    // Navigate to dashboard and capture initial total count
+    await page.goto(`${BASE}/admin`);
+    await page.waitForSelector('#total-count');
+
+    const initialCountText = await page.locator('#total-count').textContent();
+    const initialCount = parseInt(initialCountText?.match(/\d+/)?.[0] || '0', 10);
+
+    // Navigate to the public form and create a new submission
+    await page.goto(`${BASE}/form/contact`);
+    await page.waitForSelector('form');
+    await page.locator('form input[type="text"]').first().fill('Total Count Test');
+    await page.locator('form input[type="email"]').first().fill('total@test.com');
+
+    // Fill all visible text inputs (name, email, message)
+    const textInputs = page.locator('form input[type="text"]');
+    const inputCount = await textInputs.count();
+    for (let i = 0; i < inputCount; i++) {
+      await textInputs.nth(i).fill(`Test Field ${i}`);
+    }
+
+    // Fill textarea if present
+    const textarea = page.locator('form textarea');
+    if (await textarea.count() > 0) {
+      await textarea.fill('This is a test message for total count verification.');
+    }
+
+    await page.click('button[type="submit"]');
+    await expect(page.locator('#form-response')).toContainText('Thank you', { timeout: 10000 });
+
+    // Return to admin dashboard
+    await page.goto(`${BASE}/admin/login`);
+    await page.fill('input[name="password"]', ADMIN_PW);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('**/admin');
+
+    // Wait for table to load and capture new total
+    await page.waitForSelector('.table-wrapper');
+    const countAfterCreateText = await page.locator('#total-count').textContent();
+    const countAfterCreate = parseInt(countAfterCreateText?.match(/\d+/)?.[0] || '0', 10);
+
+    // Count should have increased by at least 1 (since we created one)
+    expect(countAfterCreate).toBeGreaterThanOrEqual(initialCount + 1);
+
+    // Now find the first submission row and delete it
+    const rows = page.locator('.table-wrapper tbody tr');
+    const rowCount = await rows.count();
+
+    // Skip if no rows to delete (already empty)
+    if (rowCount === 0 || await rows.locator('.empty-state').count() > 0) {
+      test.skip();
+      return;
+    }
+
+    // Locate the delete button on the most recent submission (first row)
+    const deleteButton = rows.first().locator('button:has-text("Delete")');
+    await expect(deleteButton).toBeVisible();
+
+    // Accept the confirmation dialog and click delete
+    page.once('dialog', dialog => {
+      expect(dialog.message()).toContain('Delete this submission');
+      dialog.accept();
+    });
+    await deleteButton.click();
+
+    // Wait for the row to disappear (swap animation)
+    await expect(rows.first()).not.toBeVisible({ timeout: 5000 });
+
+    // Verify the total count decremented by 1
+    const countAfterDeleteText = await page.locator('#total-count').textContent();
+    const countAfterDelete = parseInt(countAfterDeleteText?.match(/\d+/)?.[0] || '0', 10);
+    expect(countAfterDelete).toBe(countAfterCreate - 1);
+
+    // HARD REFRESH: verify count persists
+    await page.goto(`${BASE}/admin`);
+    await page.waitForSelector('#total-count');
+    const countAfterRefreshText = await page.locator('#total-count').textContent();
+    const countAfterRefresh = parseInt(countAfterRefreshText?.match(/\d+/)?.[0] || '0', 10);
+    expect(countAfterRefresh).toBe(countAfterDelete);
+  });
+
+  test('total count updates correctly when deleting last submission', async ({ page }) => {
+    // This test verifies the edge case: deleting the only remaining submission
+    // should show "0 total submissions"
+
+    // Create a temporary test form to isolate this test
+    const slug = 'count-last-test-' + Date.now();
+    await page.goto(`${BASE}/admin/forms/new`);
+    await page.fill('input[name="slug"]', slug);
+    await page.fill('input[name="title"]', 'Count Last Test');
+    await page.locator('.add-field-btn').click();
+    await page.locator('.field-card input[type="text"]').first().fill('Name');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator(`.form-item:has-text("${slug}") h3`)).toBeVisible();
+
+    // Create a single submission via the form
+    await page.goto(`${BASE}/form/${slug}`);
+    await page.waitForSelector('form');
+    await page.locator('form input[type="text"]').first().fill('Last One Test');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('#form-response')).toContainText('Thank you', { timeout: 10000 });
+
+    // Go to dashboard filtered by this form
+    await page.goto(`${BASE}/admin/submissions?form_slug=${slug}`);
+    await page.waitForSelector('.table-wrapper');
+    await page.waitForSelector('#total-count');
+
+    const countText = await page.locator('#total-count').textContent();
+    const currentCount = parseInt(countText?.match(/\d+/)?.[0] || '0', 10);
+
+    // Find and delete the row
+    const rows = page.locator('.table-wrapper tbody tr');
+    const rowCount = await rows.count();
+
+    if (rowCount === 0 || await rows.locator('.empty-state').count() > 0) {
+      test.skip();
+      return;
+    }
+
+    const deleteButton = rows.first().locator('button:has-text("Delete")');
+    page.once('dialog', dialog => dialog.accept());
+    await deleteButton.click();
+
+    // Wait for delete to complete
+    await page.waitForTimeout(1500);
+
+    // Verify total count updated
+    const countAfterText = await page.locator('#total-count').textContent();
+    expect(countAfterText).toMatch(/0 total submissions/);
+  });
+
   test('forms link navigates to forms', async ({ page }) => {
     await page.goto(`${BASE}/admin`);
     await page.click('a:has-text("Forms")');
@@ -369,8 +500,10 @@ test.describe('Form Deletion', () => {
     const deleteResp = await page.request.delete(`${BASE}/admin/submission/${submissionId}`);
     const responseBody = await deleteResp.text();
 
-    // CRITICAL: Verify the response body is empty HTML (not "ok" text)
-    expect(responseBody).toBe('');
+    // CRITICAL: Verify the response body is OOB HTML (not "ok" text)
+    expect(responseBody).not.toBe('ok');
+    expect(responseBody).toContain('hx-swap-oob="true"');
+    expect(responseBody).toContain('total submissions');
   });
 });
 
