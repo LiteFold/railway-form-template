@@ -28,15 +28,16 @@ def _verify_pow(secret: str, nonce: int, difficulty: int) -> bool:
     return h.startswith("0" * difficulty)
 
 
-async def verify_cap(token: str) -> bool:
-    if not settings.cap_endpoint or not settings.cap_secret_key:
+async def verify_cap(token: str, secret_key: Optional[str] = None) -> bool:
+    secret = secret_key or settings.cap_secret_key
+    if not settings.cap_endpoint or not secret:
         return False
     url = urljoin(settings.cap_endpoint.rstrip("/") + "/", "siteverify")
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             resp = await client.post(
                 url,
-                json={"secret": settings.cap_secret_key, "response": token},
+                json={"secret": secret, "response": token},
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -51,14 +52,14 @@ def verify_honeypot(data: dict) -> bool:
     return hp == ""
 
 
-async def verify_captcha(request, data: dict) -> tuple[bool, Optional[str]]:
+async def verify_captcha(request, data: dict, cap_secret_key: Optional[str] = None) -> tuple[bool, Optional[str]]:
     mode = settings.captcha_mode
 
     if mode == "cap":
         token = data.get("cap_token", "")
         if not token:
             return False, "CAPTCHA token missing"
-        ok = await verify_cap(token)
+        ok = await verify_cap(token, cap_secret_key)
         return ok, None if ok else "CAPTCHA verification failed"
 
     if mode == "honeypot":
@@ -79,8 +80,8 @@ async def verify_captcha(request, data: dict) -> tuple[bool, Optional[str]]:
 
     if mode == "auto":
         cap_token = data.get("cap-token", data.get("cap_token", ""))
-        if cap_token and settings.cap_endpoint and settings.cap_secret_key:
-            ok = await verify_cap(cap_token)
+        if cap_token and settings.cap_endpoint and (cap_secret_key or settings.cap_secret_key):
+            ok = await verify_cap(cap_token, cap_secret_key)
             if ok:
                 return True, None
 
