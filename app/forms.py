@@ -31,22 +31,24 @@ async def get_form_by_slug(pool: asyncpg.Pool, slug: str):
         return _parse_form(row)
 
 
-async def create_form(pool: asyncpg.Pool, slug: str, title: str, fields: list):
+async def create_form(pool: asyncpg.Pool, slug: str, title: str, fields: list,
+                      post_submit_message: str = "", redirect_url: str = ""):
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "INSERT INTO forms (slug, title, fields) VALUES ($1, $2, $3) RETURNING *",
-            slug, title, json.dumps(fields),
+            "INSERT INTO forms (slug, title, fields, post_submit_message, redirect_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            slug, title, json.dumps(fields), post_submit_message, redirect_url,
         )
         result = _parse_form(row)
 
     return result
 
 
-async def update_form(pool: asyncpg.Pool, form_id: str, title: str, fields: list):
+async def update_form(pool: asyncpg.Pool, form_id: str, title: str, fields: list,
+                      post_submit_message: str = "", redirect_url: str = ""):
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "UPDATE forms SET title = $1, fields = $2, updated_at = NOW() WHERE id = $3 RETURNING *",
-            title, json.dumps(fields), form_id,
+            "UPDATE forms SET title = $1, fields = $2, post_submit_message = $3, redirect_url = $4, updated_at = NOW() WHERE id = $5 RETURNING *",
+            title, json.dumps(fields), post_submit_message, redirect_url, form_id,
         )
         return _parse_form(row)
 
