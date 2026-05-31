@@ -42,20 +42,8 @@ async def create_form(pool: asyncpg.Pool, slug: str, title: str, fields: list):
         )
         result = _parse_form(row)
 
-    from app.config import settings
-    from app.cap_api import create_cap_site_key
-    if settings.cap_endpoint and settings.cap_secret_key:
-        cap_result = await create_cap_site_key(slug, settings.cap_endpoint, settings.cap_secret_key)
-        if cap_result:
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE forms SET cap_site_key = $1, cap_site_secret = $2 WHERE slug = $3",
-                    cap_result["site_key"], cap_result["secret_key"], slug,
-                )
-            result["cap_site_key"] = cap_result["site_key"]
-            result["cap_site_secret"] = cap_result["secret_key"]
-        else:
-            logger.warning(f"Failed to auto-provision Cap site key for form '{slug}'")
+    from app.cap_site_key import auto_provision
+    await auto_provision(pool, slug)
 
     return result
 
