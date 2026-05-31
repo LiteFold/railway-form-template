@@ -26,6 +26,8 @@
   hx-post="{{ request.base_url }}form/{{ forms[0]['slug'] }}"
   hx-target="#form-response"
   hx-swap="innerHTML"
+  action="{{ request.base_url }}form/{{ forms[0]['slug'] }}"
+  method="post"
 &gt;
 {% for field in (forms[0].fields or []) %}
   {% if field.type == 'textarea' %}
@@ -116,7 +118,7 @@
       var fieldHtml = fields.map(renderField).join('\n');
       var cap = getCapSnippet(form);
 
-      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n<div id="form-response"><\/div>';
+      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n<div id="form-response"><\/div>';
       document.getElementById('snippet-htmx').textContent = htmxHtml;
     }
 
