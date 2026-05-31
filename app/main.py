@@ -213,9 +213,79 @@ async def submit_form(request: Request, slug: str):
             return RedirectResponse(url=redirect, status_code=302)
 
         success_msg = form_def.get("post_submit_message") or "Thank you! Your submission was received."
-        return HTMLResponse(
-            f'<div class="success">{success_msg}</div>'
-        )
+
+        if request.headers.get("HX-Request") == "true":
+            # HTMX: return fragment for inline swap
+            return HTMLResponse(
+                f'<div class="success">{success_msg}</div>'
+            )
+
+        # Regular form POST: return a proper full HTML page
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Submitted</title>
+  <style>
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 48px 16px;
+    }}
+    .success-card {{
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 48px 40px;
+      width: 480px;
+      max-width: 100%;
+      text-align: center;
+    }}
+    .success-icon {{
+      font-size: 48px;
+      margin-bottom: 16px;
+    }}
+    .success-card h1 {{
+      font-size: 1.5rem;
+      color: #166534;
+      margin-bottom: 12px;
+    }}
+    .success-card p {{
+      color: #555;
+      font-size: 0.9375rem;
+    }}
+    .success-card a {{
+      display: inline-block;
+      margin-top: 24px;
+      padding: 10px 24px;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }}
+    .success-card a:hover {{ background: #1d4ed8; }}
+  </style>
+</head>
+<body>
+  <div class="success-card">
+    <div class="success-icon">&#10003;</div>
+    <h1>Thank You!</h1>
+    <p>{success_msg}</p>
+    <a href="javascript:history.back()">Go Back</a>
+  </div>
+</body>
+</html>"""
+        return HTMLResponse(content=html)
     return JSONResponse(
         status_code=201,
         content={"status": "ok", "message": "Form submitted successfully"},
