@@ -41,6 +41,12 @@ async def init_db(pool: Optional[asyncpg.Pool]):
             );
         """)
         await conn.execute("""
+            ALTER TABLE forms ADD COLUMN IF NOT EXISTS cap_site_key VARCHAR(255) DEFAULT NULL;
+        """)
+        await conn.execute("""
+            ALTER TABLE forms ADD COLUMN IF NOT EXISTS cap_site_secret VARCHAR(255) DEFAULT NULL;
+        """)
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS submissions (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 form_slug VARCHAR(100) NOT NULL REFERENCES forms(slug),

@@ -41,7 +41,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if forms[0].cap_site_key or settings.cap_site_key %}{{ forms[0].cap_site_key or settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;</pre>
@@ -74,7 +74,7 @@
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
-    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
+    data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if forms[0].cap_site_key or settings.cap_site_key %}{{ forms[0].cap_site_key or settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
@@ -93,7 +93,8 @@
     {
       "slug": {{ form.slug | tojson }},
       "title": {{ form.title | tojson }},
-      "fields": {{ form.fields | tojson }}
+      "fields": {{ form.fields | tojson }},
+      "cap_site_key": {{ form.cap_site_key | tojson }}
     }{% if not loop.last %},{% endif %}
     {%- endfor %}
   ]</script>
@@ -122,8 +123,13 @@
       }
     }
 
-    function getCapSnippet() {
-      var endpoint = "{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}";
+    function getCapSnippet(form) {
+      var formKey = form && form.cap_site_key;
+      var siteKey = formKey || "{{ settings.cap_site_key }}";
+      var endpoint = "{{ request.base_url }}cap-proxy/";
+      if (siteKey) {
+        endpoint += siteKey + "/";
+      }
       return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n  <cap-widget required\n    data-cap-api-endpoint="' + endpoint + '">\n  <\/cap-widget>';
     }
 
@@ -139,7 +145,7 @@
       var base = getBaseUrl();
       var fields = form.fields || [];
       var fieldHtml = fields.map(renderField).join('\n');
-      var cap = getCapSnippet();
+      var cap = getCapSnippet(form);
 
       var regularHtml = '<form action="' + base + 'form/' + slug + '" method="post">\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>';
       document.getElementById('snippet-code').textContent = regularHtml;
