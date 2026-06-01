@@ -127,17 +127,17 @@
         '        var error = "";\n' +
         '        if (input.hasAttribute("required") && !val) { error = "This field is required"; }\n' +
         '        else if (val) {\n' +
-        '          if (type === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '          if (type === "email") { error = !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
         '          else if (type === "tel") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
         '          else if (type === "url") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
         '          else if (type === "number") { error = isNaN(parseFloat(val)) ? "Please enter a valid number" : ""; }\n' +
         '          else if (type === "text") {\n' +
-        '            if (name === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '            if (name === "email") { error = !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
         '            else if (name === "tel" || name === "phone") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
         '            else if (name === "url" || name === "website") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
         '          }\n' +
         '          else if (input.tagName.toLowerCase() === "textarea") {\n' +
-        '            if (name === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '            if (name === "email") { error = !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
         '            else if (name === "tel" || name === "phone") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
         '            else if (name === "url" || name === "website") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
         '          }\n' +
