@@ -123,15 +123,26 @@
         '      function validate() {\n' +
         '        var val = input.value.trim();\n' +
         '        var type = input.type;\n' +
+        '        var name = input.name || "";\n' +
         '        var valid = true;\n' +
         '        if (input.hasAttribute("required") && !val) { valid = false; }\n' +
         '        else if (val) {\n' +
         '          if (type === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
         '          else if (type === "tel") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
         '          else if (type === "url") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
-        '          else if (type === "number" && isNaN(parseFloat(val))) { valid = false; }\n' +
+        '          else if (type === "number") { valid = !isNaN(parseFloat(val)); }\n' +
+        '          else if (type === "text") {\n' +
+        '            if (name === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
+        '            else if (name === "tel" || name === "phone") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
+        '            else if (name === "url" || name === "website") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '          }\n' +
+        '          else if (input.tagName.toLowerCase() === "textarea") {\n' +
+        '            if (name === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
+        '            else if (name === "tel" || name === "phone") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
+        '            else if (name === "url" || name === "website") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '          }\n' +
         '        }\n' +
-        '        errorSpan.textContent = valid ? "" : "Invalid " + type + " value";\n' +
+        '        errorSpan.textContent = valid ? "" : "Invalid value";\n' +
         '        errorSpan.className = valid ? "field-error field-error-hidden" : "field-error";\n' +
         '        input.classList.toggle("error", !valid);\n' +
         '      }\n' +
