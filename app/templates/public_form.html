@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function validate() {
       var val = input.value.trim();
       var type = input.type || '';
+      var name = input.name || '';
       var error = '';
       if (val.length > 0) {
         if (type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) {
@@ -238,6 +239,16 @@ document.addEventListener('DOMContentLoaded', function() {
           error = 'Please enter a valid URL (http/https)';
         } else if (type === 'number' && val !== '' && isNaN(parseFloat(val))) {
           error = 'Please enter a valid number';
+        }
+        // Check name for content-type hints when type is 'text' or for textarea
+        if (!error && (type === 'text' || input.tagName.toLowerCase() === 'textarea')) {
+          if (name === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) {
+            error = 'Please enter a valid email address';
+          } else if ((name === 'tel' || name === 'phone') && !/^[\d\s\-+()]+$/.test(val)) {
+            error = 'Please enter a valid phone number';
+          } else if ((name === 'url' || name === 'website') && !/^https?:\/\/.+/.test(val)) {
+            error = 'Please enter a valid URL (http/https)';
+          }
         }
       }
       errorSpan.textContent = error;
