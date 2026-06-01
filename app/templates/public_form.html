@@ -136,7 +136,12 @@
       height: 0;
       overflow: hidden;
     }
-  </style>
+  
+
+.field-error { color: #dc2626; font-size: 0.8em; margin-top: 4px; display: block; }
+.field-error-hidden { display: none; }
+input.error, textarea.error { border-color: #dc2626; }
+</style>
 </head>
 <body>
   <div class="form-card">
@@ -213,5 +218,36 @@
     })();
   </script>
   {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.form-card input, .form-card textarea').forEach(function(input) {
+    var errorSpan = document.createElement('span');
+    errorSpan.className = 'field-error field-error-hidden';
+    input.parentNode.insertBefore(errorSpan, input.nextSibling);
+    function validate() {
+      var val = input.value.trim();
+      var type = input.type || '';
+      var error = '';
+      if (val.length > 0) {
+        if (type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) {
+          error = 'Please enter a valid email address';
+        } else if (type === 'tel' && !/^[\d\s\-+()]+$/.test(val)) {
+          error = 'Please enter a valid phone number';
+        } else if (type === 'url' && !/^https?:\/\/.+/.test(val)) {
+          error = 'Please enter a valid URL (http/https)';
+        } else if (type === 'number' && val !== '' && isNaN(parseFloat(val))) {
+          error = 'Please enter a valid number';
+        }
+      }
+      errorSpan.textContent = error;
+      errorSpan.classList.toggle('field-error-hidden', !error);
+      input.classList.toggle('error', !!error);
+    }
+    input.addEventListener('input', validate);
+    input.addEventListener('blur', validate);
+  });
+});
+</script>
 </body>
 </html>
