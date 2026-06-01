@@ -30,20 +30,20 @@
   method="post"
 &gt;
 {% for field in (forms[0].fields or []) %}
-   {% if field.type == 'textarea' %}
-   &lt;textarea name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %} rows="5"&gt;&lt;/textarea&gt;
-   {% elif field.type == 'select' %}
-   &lt;select name="{{ field.name }}"{% if field.required %} required{% endif %}&gt;
-     &lt;option value=""&gt;Select {{ field.label }}&lt;/option&gt;
-     {% for opt in field.options %}
-     &lt;option value="{{ opt }}"&gt;{{ opt }}&lt;/option&gt;
-     {% endfor %}
-   &lt;/select&gt;
-   {% elif field.type == 'checkbox' %}
-   &lt;label&gt;&lt;input type="checkbox" name="{{ field.name }}" value="yes" /&gt; {{ field.label }}&lt;/label&gt;
-   {% else %}
-   &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}{% if field.type == 'text' %} maxlength="500"{% elif field.type == 'email' %} maxlength="254"{% elif field.type == 'tel' %} maxlength="20"{% elif field.type == 'url' %} maxlength="2000"{% elif field.type == 'number' %} min="0" max="999999999"{% endif %} /&gt;
-   {% endif %}
+  {% if field.type == 'textarea' %}
+  &lt;textarea name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}&gt;&lt;/textarea&gt;
+  {% elif field.type == 'select' %}
+  &lt;select name="{{ field.name }}"{% if field.required %} required{% endif %}&gt;
+    &lt;option value=""&gt;Select {{ field.label }}&lt;/option&gt;
+    {% for opt in field.options %}
+    &lt;option value="{{ opt }}"&gt;{{ opt }}&lt;/option&gt;
+    {% endfor %}
+  &lt;/select&gt;
+  {% elif field.type == 'checkbox' %}
+  &lt;label&gt;&lt;input type="checkbox" name="{{ field.name }}" value="yes" /&gt; {{ field.label }}&lt;/label&gt;
+  {% else %}
+  &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %} /&gt;
+  {% endif %}
 {% endfor %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
@@ -80,36 +80,19 @@
       var label = field.label || name;
       var required = field.required ? ' required' : '';
 
-       switch (field.type) {
-         case 'textarea':
-           return '  <textarea name="' + name + '" placeholder="' + label + '"' + required + ' rows="5"></textarea>';
-         case 'select':
-           var opts = (field.options || []).map(function(o) {
-             return '    <option value="' + o + '">' + o + '</option>';
-           }).join('\n');
-           return '  <select name="' + name + '"' + required + '>\n    <option value="">Select ' + label + '<\/option>\n' + opts + '\n  <\/select>';
-         case 'checkbox':
-           return '  <label><input type="checkbox" name="' + name + '" value="yes" /> ' + label + '<\/label>';
-         default:
-           var maxlengthAttr = '';
-           var minMaxAttr = '';
-           if (field.type === 'text') {
-             maxlengthAttr = ' maxlength="500"';
-           } else if (field.type === 'email') {
-             maxlengthAttr = ' maxlength="254"';
-           } else if (field.type === 'tel') {
-             maxlengthAttr = ' maxlength="20"';
-           } else if (field.type === 'url') {
-             maxlengthAttr = ' maxlength="2000"';
-           } else if (field.type === 'number') {
-             minMaxAttr = ' min="0" max="999999999"';
-           }
-           return '  <input type="' + field.type + '" name="' + name + '" placeholder="' + label + '"' + required + maxlengthAttr + minMaxAttr + ' />';
-       }
-    }
-
-    function getValidationSnippet() {
-      return '<style>\n.field-error { color: #dc2626; font-size: 0.8em; margin-top: 4px; display: block; }\n.field-error-hidden { display: none; }\ninput.error, textarea.error { border-color: #dc2626; }\n<\/style>\n<script>\ndocument.addEventListener(\"DOMContentLoaded\",function(){document.querySelectorAll(\"form input, form textarea\").forEach(function(i){var e=document.createElement(\"span\");e.className=\"field-error field-error-hidden\";i.parentNode.insertBefore(e,i.nextSibling);function v(){var v=i.value.trim(),t=i.type||\"\",err=\"\";if(v.length>0){if(t===\"email\"&&!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v)){err=\"Please enter a valid email address\"}else if(t===\"tel\"&&!/^[\\d\\s\\-+()]+$/.test(v)){err=\"Please enter a valid phone number\"}else if(t===\"url\"&&!/^https?:\\/\\/.+/.test(v)){err=\"Please enter a valid URL (http/https)\"}else if(t===\"number\"&&v!==\"\"&&isNaN(parseFloat(v))){err=\"Please enter a valid number\"}}e.textContent=err;e.classList.toggle(\"field-error-hidden\",!err);i.classList.toggle(\"error\",!!err)}i.addEventListener(\"input\",v);i.addEventListener(\"blur\",v)})});<\/script>';
+      switch (field.type) {
+        case 'textarea':
+          return '  <textarea name="' + name + '" placeholder="' + label + '"' + required + '></textarea>';
+        case 'select':
+          var opts = (field.options || []).map(function(o) {
+            return '    <option value="' + o + '">' + o + '</option>';
+          }).join('\n');
+          return '  <select name="' + name + '"' + required + '>\n    <option value="">Select ' + label + '<\/option>\n' + opts + '\n  <\/select>';
+        case 'checkbox':
+          return '  <label><input type="checkbox" name="' + name + '" value="yes" /> ' + label + '<\/label>';
+        default:
+          return '  <input type="' + field.type + '" name="' + name + '" placeholder="' + label + '"' + required + ' />';
+      }
     }
 
     function getCapSnippet(_form) {
@@ -118,7 +101,45 @@
       if (siteKey) {
         endpoint += siteKey + "/";
       }
-      return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n  <cap-widget required\n    data-cap-api-endpoint="' + endpoint + '">\n  <\/cap-widget>';
+      return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n' +
+        '  <cap-widget required\n' +
+        '    data-cap-api-endpoint="' + endpoint + '">\n' +
+        '  <\/cap-widget>';
+    }
+
+    function getValidationSnippet() {
+      return '<style>\n' +
+        '  .field-error { color: #d32f2f; font-size: 0.875em; margin-top: 0.25em; display: block; }\n' +
+        '  .field-error-hidden { display: none; }\n' +
+        '  input.error, textarea.error { border-color: #d32f2f !important; }\n' +
+        '<\/style>\n' +
+        '<script>\n' +
+        '  document.addEventListener("DOMContentLoaded", function() {\n' +
+        '    var inputs = document.querySelectorAll("form input, form textarea");\n' +
+        '    inputs.forEach(function(input) {\n' +
+        '      var errorSpan = document.createElement("span");\n' +
+        '      errorSpan.className = "field-error field-error-hidden";\n' +
+        '      input.parentNode.insertBefore(errorSpan, input.nextSibling);\n' +
+        '      function validate() {\n' +
+        '        var val = input.value.trim();\n' +
+        '        var type = input.type;\n' +
+        '        var valid = true;\n' +
+        '        if (input.hasAttribute("required") && !val) { valid = false; }\n' +
+        '        else if (val) {\n' +
+        '          if (type === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
+        '          else if (type === "tel") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
+        '          else if (type === "url") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '          else if (type === "number" && isNaN(parseFloat(val))) { valid = false; }\n' +
+        '        }\n' +
+        '        errorSpan.textContent = valid ? "" : "Invalid " + type + " value";\n' +
+        '        errorSpan.className = valid ? "field-error field-error-hidden" : "field-error";\n' +
+        '        input.classList.toggle("error", !valid);\n' +
+        '      }\n' +
+        '      input.addEventListener("input", validate);\n' +
+        '      input.addEventListener("blur", validate);\n' +
+        '    });\n' +
+        '  });\n' +
+        '<\/script>';
     }
 
     function updateSnippet() {
@@ -134,9 +155,9 @@
       var fields = form.fields || [];
       var fieldHtml = fields.map(renderField).join('\n');
       var cap = getCapSnippet(form);
+      var validation = getValidationSnippet();
 
-            var validationSnippet = getValidationSnippet();
-      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n<div id="form-response"><\/div>\n' + validationSnippet;
+      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n' + validation + '\n<div id="form-response"><\/div>';
       document.getElementById('snippet-htmx').textContent = htmxHtml;
     }
 
