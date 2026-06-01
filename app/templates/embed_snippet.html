@@ -101,7 +101,45 @@
       if (siteKey) {
         endpoint += siteKey + "/";
       }
-      return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n  <cap-widget required\n    data-cap-api-endpoint="' + endpoint + '">\n  <\/cap-widget>';
+      return '  <script src="https://cdn.jsdelivr.net/npm/cap-widget"><\/script>\n' +
+        '  <cap-widget required\n' +
+        '    data-cap-api-endpoint="' + endpoint + '">\n' +
+        '  <\/cap-widget>';
+    }
+
+    function getValidationSnippet() {
+      return '<style>\n' +
+        '  .field-error { color: #d32f2f; font-size: 0.875em; margin-top: 0.25em; display: block; }\n' +
+        '  .field-error-hidden { display: none; }\n' +
+        '  input.error, textarea.error { border-color: #d32f2f !important; }\n' +
+        '<\/style>\n' +
+        '<script>\n' +
+        '  document.addEventListener("DOMContentLoaded", function() {\n' +
+        '    var inputs = document.querySelectorAll("form input, form textarea");\n' +
+        '    inputs.forEach(function(input) {\n' +
+        '      var errorSpan = document.createElement("span");\n' +
+        '      errorSpan.className = "field-error field-error-hidden";\n' +
+        '      input.parentNode.insertBefore(errorSpan, input.nextSibling);\n' +
+        '      function validate() {\n' +
+        '        var val = input.value.trim();\n' +
+        '        var type = input.type;\n' +
+        '        var valid = true;\n' +
+        '        if (input.hasAttribute("required") && !val) { valid = false; }\n' +
+        '        else if (val) {\n' +
+        '          if (type === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
+        '          else if (type === "tel") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
+        '          else if (type === "url") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '          else if (type === "number" && isNaN(parseFloat(val))) { valid = false; }\n' +
+        '        }\n' +
+        '        errorSpan.textContent = valid ? "" : "Invalid " + type + " value";\n' +
+        '        errorSpan.className = valid ? "field-error field-error-hidden" : "field-error";\n' +
+        '        input.classList.toggle("error", !valid);\n' +
+        '      }\n' +
+        '      input.addEventListener("input", validate);\n' +
+        '      input.addEventListener("blur", validate);\n' +
+        '    });\n' +
+        '  });\n' +
+        '<\/script>';
     }
 
     function updateSnippet() {
@@ -117,8 +155,9 @@
       var fields = form.fields || [];
       var fieldHtml = fields.map(renderField).join('\n');
       var cap = getCapSnippet(form);
+      var validation = getValidationSnippet();
 
-      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n<div id="form-response"><\/div>';
+      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n' + validation + '\n<div id="form-response"><\/div>';
       document.getElementById('snippet-htmx').textContent = htmxHtml;
     }
 
