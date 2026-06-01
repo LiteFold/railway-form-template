@@ -124,30 +124,41 @@
         '        var val = input.value.trim();\n' +
         '        var type = input.type;\n' +
         '        var name = input.name || "";\n' +
-        '        var valid = true;\n' +
-        '        if (input.hasAttribute("required") && !val) { valid = false; }\n' +
+        '        var error = "";\n' +
+        '        if (input.hasAttribute("required") && !val) { error = "This field is required"; }\n' +
         '        else if (val) {\n' +
-        '          if (type === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
-        '          else if (type === "tel") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
-        '          else if (type === "url") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
-        '          else if (type === "number") { valid = !isNaN(parseFloat(val)); }\n' +
+        '          if (type === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '          else if (type === "tel") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
+        '          else if (type === "url") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
+        '          else if (type === "number") { error = isNaN(parseFloat(val)) ? "Please enter a valid number" : ""; }\n' +
         '          else if (type === "text") {\n' +
-        '            if (name === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
-        '            else if (name === "tel" || name === "phone") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
-        '            else if (name === "url" || name === "website") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '            if (name === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '            else if (name === "tel" || name === "phone") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
+        '            else if (name === "url" || name === "website") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
         '          }\n' +
         '          else if (input.tagName.toLowerCase() === "textarea") {\n' +
-        '            if (name === "email") { valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }\n' +
-        '            else if (name === "tel" || name === "phone") { valid = /^[0-9\\-()\\s\\+]+$/.test(val); }\n' +
-        '            else if (name === "url" || name === "website") { valid = /^https?:\\/\\/.+/i.test(val); }\n' +
+        '            if (name === "email") { error = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? "Please enter a valid email address" : ""; }\n' +
+        '            else if (name === "tel" || name === "phone") { error = !/^[0-9\\-()\\s\\+]+$/.test(val) ? "Please enter a valid phone number" : ""; }\n' +
+        '            else if (name === "url" || name === "website") { error = !/^https?:\\/\\/.+/i.test(val) ? "Please enter a valid URL" : ""; }\n' +
         '          }\n' +
         '        }\n' +
-        '        errorSpan.textContent = valid ? "" : "Invalid value";\n' +
-        '        errorSpan.className = valid ? "field-error field-error-hidden" : "field-error";\n' +
-        '        input.classList.toggle("error", !valid);\n' +
+        '        errorSpan.textContent = error;\n' +
+        '        errorSpan.className = error ? "field-error" : "field-error field-error-hidden";\n' +
+        '        input.classList.toggle("error", !!error);\n' +
         '      }\n' +
         '      input.addEventListener("input", validate);\n' +
         '      input.addEventListener("blur", validate);\n' +
+        '    });\n' +
+        '    var forms = document.querySelectorAll("form");\n' +
+        '    forms.forEach(function(form) {\n' +
+        '      form.addEventListener("submit", function(e) {\n' +
+        '        var hasError = false;\n' +
+        '        var formInputs = form.querySelectorAll("input, textarea");\n' +
+        '        formInputs.forEach(function(inp) {\n' +
+        '          if (inp.classList.contains("error")) hasError = true;\n' +
+        '        });\n' +
+        '        if (hasError) e.preventDefault();\n' +
+        '      });\n' +
         '    });\n' +
         '  });\n' +
         '<\/script>';
