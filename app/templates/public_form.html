@@ -170,7 +170,7 @@
           </div>
         {% else %}
           <label{% if field.required %} class="field-required"{% endif %}>{{ field.label }}</label>
-          <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}{% if field.type == 'text' %} maxlength="500"{% elif field.type == 'email' %} maxlength="254"{% elif field.type == 'tel' %} maxlength="20"{% elif field.type == 'url' %} maxlength="2000"{% elif field.type == 'number' %} min="0" max="999999999"{% endif %}>
+          <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}{% if field.type == 'text' %} maxlength="500"{% elif field.type == 'email' %} maxlength="254" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Enter valid email"{% elif field.type == 'tel' %} maxlength="20" pattern="[\d\s\-+\(\)]{7,20}" title="Enter valid phone (7-20 digits)"{% elif field.type == 'url' %} maxlength="2000" pattern="https?://.+" title="Enter valid URL (http/https)"{% elif field.type == 'number' %} min="0" max="999999999"{% endif %}
         {% endif %}
       {% endfor %}
 

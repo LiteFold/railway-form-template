@@ -164,10 +164,67 @@ async def submit_form(request: Request, slug: str):
                 return HTMLResponse(status_code=200, content=f'<div style="background:#fee2e2;border:1px solid #ef4444;color:#991b1b;padding:12px 16px;border-radius:6px">Field "{field.get("label", fname)}" is required</div>')
             raise HTTPException(status_code=400, detail=f"Field '{field.get('label', fname)}' is required")
         submission_data[fname] = val
+        # Validate field type with specific checks
         if field.get("type") == "email":
-            email_val = val
-        if fname == "name":
-            name_val = val
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", val):
+                raise HTTPException(status_code=422, detail="Invalid email format")
+        elif field.get("type") == "tel":
+            if not re.match(r"^[\d\s\+\-\(\)\.\[\]]+$", val):
+                raise HTTPException(status_code=422, detail="Phone number contains invalid characters")
+        elif field.get("type") == "url":
+            if not val.startswith(("http://", "https://")):
+                raise HTTPException(status_code=422, detail="URL must start with http:// or https://")
+        elif field.get("type") == "number":
+            try:
+                float(val)
+            except ValueError:
+                raise HTTPException(status_code=422, detail="Number field must contain a valid number")
+        if field.get("type") in ("email", "tel", "url", "number"):
+            if not isinstance(val, str):
+                raise HTTPException(status_code=422, detail=f"Field '{field.get('label', fname)}' must be a string")
+            if field.get("type") == "email":
+                try:
+                    # Basic email format validation
+                    email_val = val
+                    if fname == "name": name_val = val
+                    email_val_lower = val.lower()
+                    # Extract local part and domain
+                    if "@" not in email_val_lower:
+                        raise HTTPException(status_code=422, detail="Invalid email format: missing @")
+                    local, domain = email_val_lower.split("@", 1)
+                    if not local or not domain:
+                        raise HTTPException(status_code=422, detail="Invalid email format")
+                    if len(local) > 64 or len(domain) > 255:
+                        raise HTTPException(status_code=422, detail="Invalid email format: too long")
+                    if any(c in local for c in [" ", "\t", "\n"]):
+                        raise HTTPException(status_code=422, detail="Invalid email format: spaces not allowed")
+                except Exception:
+                    raise HTTPException(status_code=422, detail="Invalid email format")
+            elif field.get("type") == "tel":
+                # Basic tel number validation (allow only digits, spaces, +, -, () and [])
+                import re
+                if not re.match(r'^[\d\s\+\-()\[\]\.]+$', val):
+                    raise HTTPException(status_code=422, detail="Phone number contains invalid characters")
+            elif field.get("type") == "url":
+                # Basic URL validation
+                if not val.startswith(("http://", "https://")):
+                    raise HTTPException(status_code=422, detail="URL must start with http:// or https://")
+                if len(val) > 2048:
+                    raise HTTPException(status_code=422, detail="URL is too long")
+                try:
+                    # Basic check for valid URL characters
+                    from urllib.parse import urlparse
+                    parsed = urlparse(val)
+                    if not parsed.netloc:
+                        raise HTTPException(status_code=422, detail="Invalid URL")
+                except Exception:
+                    raise HTTPException(status_code=422, detail="Invalid URL format")
+            elif field.get("type") == "number":
+                # Ensure numeric value can be parsed as float
+                try:
+                    float(val)
+                except ValueError:
+                    raise HTTPException(status_code=422, detail="Number field must contain a valid number")
 
     # Fix 1: Check for unexpected/honeypot fields BEFORE popping system fields
     form_field_names = {f.get("name") for f in form_def["fields"]}
