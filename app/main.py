@@ -4,6 +4,7 @@ import uuid
 from contextlib import asynccontextmanager
 from urllib.parse import urljoin
 import httpx
+import re
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -202,7 +203,6 @@ async def submit_form(request: Request, slug: str):
                     raise HTTPException(status_code=422, detail="Invalid email format")
             elif field.get("type") == "tel":
                 # Basic tel number validation (allow only digits, spaces, +, -, () and [])
-                import re
                 if not re.match(r'^[\d\s\+\-()\[\]\.]+$', val):
                     raise HTTPException(status_code=422, detail="Phone number contains invalid characters")
             elif field.get("type") == "url":
