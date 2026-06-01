@@ -152,7 +152,7 @@
       {% for field in form.fields %}
         {% if field.type == 'textarea' %}
           <label{% if field.required %} class="field-required"{% endif %}>{{ field.label }}</label>
-          <textarea name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}></textarea>
+          <textarea name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %} rows="5"></textarea>
         {% elif field.type == 'select' %}
           <label{% if field.required %} class="field-required"{% endif %}>{{ field.label }}</label>
           <select name="{{ field.name }}"{% if field.required %} required{% endif %}>
@@ -170,7 +170,7 @@
           </div>
         {% else %}
           <label{% if field.required %} class="field-required"{% endif %}>{{ field.label }}</label>
-          <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}>
+          <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %}{% if field.type == 'text' %} maxlength="500"{% elif field.type == 'email' %} maxlength="254"{% elif field.type == 'tel' %} maxlength="20"{% elif field.type == 'url' %} maxlength="2000"{% elif field.type == 'number' %} min="0" max="999999999"{% endif %}>
         {% endif %}
       {% endfor %}
 

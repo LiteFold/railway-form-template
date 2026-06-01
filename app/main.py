@@ -18,6 +18,8 @@ from app.email_ import send_notification
 from app.forms import get_form_by_slug, get_forms
 from app.rate_limit import check_rate_limit, ensure_rate_limit_table
 
+FIELD_LIMITS = {"text": 500, "email": 254, "tel": 20, "url": 2000}
+
 def _wants_html(request: Request) -> bool:
     if request.headers.get("hx-request") == "true":
         return True
