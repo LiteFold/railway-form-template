@@ -14,7 +14,7 @@ tags:
 
 > A self-hosted contact form with Cap CAPTCHA anti-spam and HTMX admin dashboard. Deploy on Railway in one click.
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.com/workspace/templates/new?projectId=bc5fe6ef-4975-49a5-ae09-5a0ef3124f36)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.com/deploy/form-cap)
 
 ```text
 ┌─────────────────────────────────────────────────┐
