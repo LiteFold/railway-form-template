@@ -1,6 +1,6 @@
 {
   "DATABASE_URL": {
-    "value": "postgresql://postgres:${{POSTGRES.PASSWORD}}@${{POSTGRES.RAILWAY_PRIVATE_DOMAIN}}:5432/${{POSTGRES.DB}}",
+    "value": "postgresql://postgres:${{postgres.POSTGRES_PASSWORD}}@${{postgres.RAILWAY_PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}",
     "description": "PostgreSQL connection string. Auto-wired to the sibling 'postgres' service in this template. No need to edit."
   },
   "ADMIN_PASSWORD": {
@@ -8,7 +8,7 @@
     "description": "Password to access the admin dashboard at /admin. Auto-generated on deploy. Change it after first login."
   },
   "CAP_ENDPOINT": {
-    "value": "https://${{CAP.RAILWAY_PUBLIC_DOMAIN}}",
+    "value": "https://${{cap.RAILWAY_PUBLIC_DOMAIN}}",
     "description": "Public URL of the sibling 'cap' CAPTCHA service. Auto-wired to this template's Cap service."
   },
   "CAP_SECRET_KEY": {

@@ -4,7 +4,7 @@
     "description": "Cap dashboard login password (at least 32 chars recommended). Auto-generated on deploy."
   },
   "REDIS_URL": {
-    "value": "redis://${{VALKEY.RAILWAY_PRIVATE_DOMAIN}}:6379",
+    "value": "redis://${{valkey.RAILWAY_PRIVATE_DOMAIN}}:6379",
     "description": "Redis-compatible connection string for Cap session/challenge storage. Auto-wired to the sibling 'valkey' service in this template. No need to edit."
   },
   "CORS_ORIGIN": {
