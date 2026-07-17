@@ -1,0 +1,66 @@
+{
+  "DATABASE_URL": {
+    "value": "postgresql://postgres:${{POSTGRES.PASSWORD}}@${{POSTGRES.RAILWAY_PRIVATE_DOMAIN}}:5432/${{POSTGRES.DB}}",
+    "description": "PostgreSQL connection string. Auto-wired to the sibling 'postgres' service in this template. No need to edit."
+  },
+  "ADMIN_PASSWORD": {
+    "value": "${{secret(32)}}",
+    "description": "Password to access the admin dashboard at /admin. Auto-generated on deploy. Change it after first login."
+  },
+  "CAP_ENDPOINT": {
+    "value": "https://${{CAP.RAILWAY_PUBLIC_DOMAIN}}",
+    "description": "Public URL of the sibling 'cap' CAPTCHA service. Auto-wired to this template's Cap service."
+  },
+  "CAP_SECRET_KEY": {
+    "value": "${{secret(32)}}",
+    "description": "Shared secret used to verify Cap challenge tokens (HMAC). Auto-generated; must match what Cap issues. Keep in sync with the Cap service if you rotate it."
+  },
+  "CAP_SITE_KEY": {
+    "value": "",
+    "description": "Cap site key passed to the frontend widget. Leave empty unless you created a specific site key in the Cap dashboard."
+  },
+  "CAPTCHA_MODE": {
+    "value": "auto",
+    "description": "CAPTCHA mode: 'auto' (use Cap if CAP_ENDPOINT is reachable, else none), 'cap' (force Cap), or 'none' (disabled)."
+  },
+  "FORM_RECIPIENT_EMAIL": {
+    "value": "",
+    "description": "Email address that receives form submissions. Set this to your address before going live — submissions are not delivered if it is empty."
+  },
+  "SENDGRID_API_KEY": {
+    "value": "",
+    "description": "SendGrid API key for submission notifications. Leave empty to fall back to SMTP (see SMTP_HOST). Optional."
+  },
+  "SMTP_HOST": {
+    "value": "",
+    "description": "SMTP server hostname for sending notifications. Optional if SendGrid is configured."
+  },
+  "SMTP_PORT": {
+    "value": "587",
+    "description": "SMTP server port. Default 587 (STARTTLS). Use 465 for implicit TLS."
+  },
+  "SMTP_USER": {
+    "value": "",
+    "description": "SMTP auth username. Optional for anonymous relays."
+  },
+  "SMTP_PASS": {
+    "value": "",
+    "description": "SMTP auth password. Optional for anonymous relays."
+  },
+  "FROM_EMAIL": {
+    "value": "noreply@contact-form.app",
+    "description": "From-address on outgoing notifications. Use a real address on a domain you control to avoid SPF/DKIM failures."
+  },
+  "RATE_LIMIT": {
+    "value": "10",
+    "description": "Max submissions per IP per minute. Default 10. Lower for stricter anti-abuse, raise for trusted internal use."
+  },
+  "RATE_LIMIT_BACKEND": {
+    "value": "memory",
+    "description": "Rate-limit store: 'memory' (per-replica, fine for a single instance) or 'db' (shared via PostgreSQL; requires DATABASE_URL)."
+  },
+  "SESSION_SECRET_KEY": {
+    "value": "${{secret(64)}}",
+    "description": "Secret used to sign admin session cookies. Auto-generated on deploy. Change to invalidate all active admin sessions."
+  }
+}

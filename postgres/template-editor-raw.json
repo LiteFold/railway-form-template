@@ -1,0 +1,18 @@
+{
+  "POSTGRES_USER": {
+    "value": "postgres",
+    "description": "Superuser name. Referenced by the Form API's DATABASE_URL."
+  },
+  "POSTGRES_PASSWORD": {
+    "value": "${{secret(24)}}",
+    "description": "Superuser password. Auto-generated on deploy. Referenced by the Form API's DATABASE_URL — do not edit unless you also update DATABASE_URL there."
+  },
+  "POSTGRES_DB": {
+    "value": "formdb",
+    "description": "Default database created on first boot. Referenced by the Form API's DATABASE_URL."
+  },
+  "PGDATA": {
+    "value": "/var/lib/postgresql/data",
+    "description": "Data directory. The parent /var/lib/postgresql is mounted as a volume so data survives restarts."
+  }
+}
