@@ -9,3 +9,5 @@ httpx>=0.28
 sendgrid>=6.11
 python-dotenv>=1.0
 itsdangerous>=2.2
+tzdata>=2024.1
+maxminddb>=2.6

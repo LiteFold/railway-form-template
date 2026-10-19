@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Contact Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/admin.css">
   <style>
     .error-banner {
@@ -18,11 +21,13 @@
     .col-actions { width: 200px; white-space: nowrap; }
     .cell-data { max-width: 0; }
     .data-preview {
-      max-height: 4.5em;
-      overflow-y: auto;
+      max-height: 4.2em;
+      overflow: hidden;
       word-break: break-word;
       font-size: 0.8125rem;
       line-height: 1.4;
+      -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+      mask-image: linear-gradient(180deg, #000 70%, transparent);
     }
     .cell-actions { white-space: nowrap; }
   </style>
@@ -34,7 +39,8 @@
     <nav class="sidebar">
       <h2>Contact Form</h2>
       <ul>
-        <li><a href="/admin" class="{% if not show_forms and not editing_form %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/admin" class="{% if not show_forms and not editing_form and not show_analytics %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/admin/analytics" class="{% if show_analytics %}active{% endif %}">Analytics</a></li>
         <li><a href="/admin/forms" class="{% if show_forms or editing_form is defined and editing_form %}active{% endif %}">Forms</a></li>
         <li><a href="/">Embed</a></li>
       </ul>
@@ -49,7 +55,9 @@
       {% if error %}
         <div class="error-banner">{{ error }}</div>
       {% endif %}
-      {% if show_forms %}
+      {% if show_analytics %}
+        {% include "admin_analytics.html" with context %}
+      {% elif show_forms %}
         {% include "admin_forms.html" with context %}
       {% elif editing_form is defined and editing_form %}
         {% include "admin_forms.html" with context %}

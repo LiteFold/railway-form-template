@@ -63,5 +63,6 @@ async def delete_form(pool: asyncpg.Pool, form_id: str) -> bool:
         )
         if sub_count is not None and sub_count > 0:
             await conn.execute("DELETE FROM submissions WHERE form_slug = $1", slug)
+        await conn.execute("DELETE FROM analytics_charts WHERE form_slug = $1", slug)
         result = await conn.execute("DELETE FROM forms WHERE id = $1", form_id)
         return True

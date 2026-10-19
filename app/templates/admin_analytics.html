@@ -1,0 +1,925 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" integrity="sha384-3RT6/aAL0nKpqF8ldMoIrxz8OmRcPrKbR8MYXgvv2iKryEvn2vbfoI+FJbcpl+VW" crossorigin="anonymous">
+<link rel="stylesheet" href="/static/analytics.css">
+
+<div class="an is-loading" id="an">
+  <div class="an-top">
+    <div>
+      <h1>Analytics</h1>
+      <p class="an-sub" id="an-range-label">Loading…</p>
+    </div>
+    <div class="an-controls">
+      <label class="an-ctl"><span>Form</span>
+        <select id="an-form">
+          <option value="">All forms</option>
+          {% for f in forms %}
+            <option value="{{ f['slug'] }}">{{ f['title'] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="an-ctl"><span>Date range</span>
+        <select id="an-preset">
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+          <option value="12m">Last 12 months</option>
+          <option value="ytd">Year to date</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom range…</option>
+        </select>
+      </label>
+      <div class="an-custom" id="an-custom" hidden>
+        <input type="date" id="an-start" aria-label="Start date">
+        <span>–</span>
+        <input type="date" id="an-end" aria-label="End date">
+      </div>
+      <div class="an-seg" id="an-gran" role="group" aria-label="Group by">
+        <button type="button" data-v="auto">Auto</button>
+        <button type="button" data-v="day">Day</button>
+        <button type="button" data-v="week">Week</button>
+        <button type="button" data-v="month">Month</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="an-kpis">
+    <div class="an-kpi"><span class="an-kpi-label">Submissions</span><span class="an-kpi-value" id="k-total">–</span><span class="an-kpi-foot" id="k-change"></span></div>
+    <div class="an-kpi"><span class="an-kpi-label">Daily average</span><span class="an-kpi-value" id="k-avg">–</span><span class="an-kpi-foot" id="k-avg-foot"></span></div>
+    <div class="an-kpi"><span class="an-kpi-label">Countries</span><span class="an-kpi-value" id="k-countries">–</span><span class="an-kpi-foot" id="k-top-country"></span></div>
+    <div class="an-kpi"><span class="an-kpi-label">Busiest weekday</span><span class="an-kpi-value" id="k-busiest">–</span><span class="an-kpi-foot">most submissions</span></div>
+  </div>
+
+  <section class="an-card">
+    <header class="an-card-head">
+      <h3>Submissions over time</h3>
+      <div class="an-seg an-seg-sm" id="an-ts-type" role="group" aria-label="Chart style">
+        <button type="button" data-v="area">Area</button>
+        <button type="button" data-v="bar">Bars</button>
+      </div>
+    </header>
+    <div class="an-chart an-chart-lg"><canvas id="c-ts"></canvas></div>
+  </section>
+
+  <div class="an-row an-row-map">
+    <section class="an-card">
+      <header class="an-card-head">
+        <h3>Where submissions come from</h3>
+        <select id="an-map-field" aria-label="Map data source">
+          <option value="_country">Visitor location</option>
+        </select>
+      </header>
+      <div id="an-map" class="an-map"></div>
+      <div class="an-map-foot">
+        <div class="an-legend" id="an-legend"></div>
+        <span class="an-note" id="an-map-note"></span>
+      </div>
+    </section>
+    <section class="an-card">
+      <header class="an-card-head"><h3 id="an-top-title">Top countries</h3></header>
+      <ol class="an-toplist" id="an-toplist"></ol>
+    </section>
+  </div>
+
+  <div class="an-row">
+    <section class="an-card">
+      <header class="an-card-head"><h3>By day of week</h3></header>
+      <div class="an-chart an-chart-sm"><canvas id="c-weekday"></canvas></div>
+    </section>
+    <section class="an-card">
+      <header class="an-card-head"><h3>By hour of day</h3><span class="an-note" id="an-tz-note"></span></header>
+      <div class="an-chart an-chart-sm"><canvas id="c-hour"></canvas></div>
+    </section>
+  </div>
+
+  <div class="an-section-head">
+    <div>
+      <h2>Field breakdowns</h2>
+      <p class="an-note">How people answered each choice and number field</p>
+    </div>
+  </div>
+  <div class="an-grid" id="an-breakdowns"></div>
+
+  <div class="an-section-head">
+    <div>
+      <h2>Custom charts</h2>
+      <p class="an-note">Chart any fields against days, weeks, months, weekdays, hours or countries</p>
+    </div>
+    <button type="button" class="btn btn-primary" id="an-add">+ Add chart</button>
+  </div>
+  <div class="an-row" id="an-custom-charts"></div>
+</div>
+
+<div class="an-modal" id="an-builder" hidden>
+  <div class="an-modal-card" role="dialog" aria-modal="true" aria-labelledby="b-heading">
+    <header class="an-modal-head">
+      <h3 id="b-heading">New chart</h3>
+      <button type="button" class="an-close" data-close aria-label="Close">&times;</button>
+    </header>
+    <div class="an-modal-body">
+      <div class="an-b-form">
+        <label class="an-field"><span>Title</span>
+          <input type="text" id="b-title" maxlength="100" placeholder="e.g. Ticket types by month">
+        </label>
+        <div class="an-field"><span>Chart type</span>
+          <div class="an-types" id="b-type">
+            <button type="button" data-v="stacked">Stacked bars</button>
+            <button type="button" data-v="bar">Grouped bars</button>
+            <button type="button" data-v="hbar">Horizontal</button>
+            <button type="button" data-v="line">Line</button>
+            <button type="button" data-v="area">Area</button>
+            <button type="button" data-v="doughnut">Doughnut</button>
+          </div>
+        </div>
+        <label class="an-field"><span>Group by (X axis)</span>
+          <select id="b-x"></select>
+        </label>
+        <div class="an-field" id="b-fields-wrap"><span>Break down by</span>
+          <div class="an-chips" id="b-fields"></div>
+          <small>Pick one field to split it by its answers, or several to compare them side by side. Leave empty to just count submissions.</small>
+        </div>
+        <label class="an-field" id="b-metric-wrap"><span>Measure</span>
+          <select id="b-metric">
+            <option value="count">Count of submissions</option>
+            <option value="sum">Sum of number fields</option>
+            <option value="avg">Average of number fields</option>
+          </select>
+        </label>
+        <p class="an-b-error" id="b-error" hidden></p>
+      </div>
+      <div class="an-b-preview">
+        <span class="an-note">Preview · uses the current date range</span>
+        <div class="an-chart"><canvas id="c-preview"></canvas></div>
+      </div>
+    </div>
+    <footer class="an-modal-foot">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="button" class="btn btn-primary" id="b-save">Save chart</button>
+    </footer>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js" integrity="sha384-dUo4VnkPwa5iJ/udOYY1SRDya6+2CVXYRfing32kyXbeB6HePV/YmJ3EPPvYz/Sb" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js" integrity="sha384-QCoiowLYPphJpiHouJIJOUCcg6AxqnLAAyEjkZnJ7RQCpC3YY1kEX0PaOant/8kx" crossorigin="anonymous"></script>
+<script>
+(function () {
+  'use strict';
+
+  var PALETTE = ['#ffc23d', '#5bc8d3', '#ff5c5c', '#4f7cff', '#8b5cf6', '#22c55e', '#ec4899', '#f97316'];
+  var OTHER = '#cbd5e1';
+  var SHADES = ['#dbe6ff', '#b4cbff', '#82a6ff', '#4f7cff', '#2a55e0', '#1a3aa8'];
+  var FREE_TEXT = { textarea: 1, email: 1, url: 1, tel: 1 };
+  var TZ = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'UTC';
+  var X_LABELS = { day: 'day', week: 'week', month: 'month', weekday: 'day of week', hour: 'hour of day' };
+  var TYPE_LABELS = { stacked: 'Stacked bars', bar: 'Grouped bars', hbar: 'Horizontal bars', line: 'Line', area: 'Area', doughnut: 'Doughnut' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var root = $('an');
+
+  // ---------- formatting ----------
+  var regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+  function countryName(code) {
+    if (!code || code === 'Unknown' || code === 'Other') return code || 'Unknown';
+    try { return regionNames.of(code) || code; } catch (e) { return code; }
+  }
+  var NAME_TO_CODE = (function () {
+    var map = {};
+    for (var i = 0; i < 26; i++) {
+      for (var j = 0; j < 26; j++) {
+        var c = String.fromCharCode(65 + i, 65 + j), name;
+        try { name = regionNames.of(c); } catch (e) { continue; }
+        if (name && name !== c) map[name.toLowerCase()] = c;
+      }
+    }
+    var aliases = {
+      'usa': 'US', 'united states of america': 'US', 'america': 'US', 'uk': 'GB', 'england': 'GB',
+      'great britain': 'GB', 'britain': 'GB', 'scotland': 'GB', 'wales': 'GB', 'russia': 'RU',
+      'south korea': 'KR', 'korea': 'KR', 'north korea': 'KP', 'uae': 'AE', 'czech republic': 'CZ',
+      'vietnam': 'VN', 'holland': 'NL', 'the netherlands': 'NL', 'turkey': 'TR', 'ivory coast': 'CI'
+    };
+    Object.keys(aliases).forEach(function (k) { map[k] = aliases[k]; });
+    return map;
+  })();
+  function toCountryCode(value) {
+    var s = String(value || '').trim();
+    if (/^[A-Za-z]{2}$/.test(s)) {
+      var up = s.toUpperCase();
+      try { if (regionNames.of(up) !== up) return up; } catch (e) { /* not a region code */ }
+    }
+    return NAME_TO_CODE[s.toLowerCase()] || null;
+  }
+  function fmt(n) { return (n == null ? 0 : n).toLocaleString(); }
+  function parseISO(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function iso(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function hexA(hex, a) {
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  // ---------- api ----------
+  function api(url, opts) {
+    opts = opts || {};
+    opts.credentials = 'same-origin';
+    opts.headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    return fetch(url, opts).then(function (r) {
+      if (r.status === 401) { location.href = '/admin/login'; throw new Error('Not signed in'); }
+      return r.json().catch(function () { return {}; }).then(function (body) {
+        if (!r.ok) throw new Error(body.detail || ('Request failed (' + r.status + ')'));
+        return body;
+      });
+    });
+  }
+
+  // ---------- Chart.js setup ----------
+  Chart.defaults.font.family = "'DM Sans', -apple-system, 'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#64748b';
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
+  Chart.defaults.plugins.legend.labels.boxWidth = 7;
+  Chart.defaults.plugins.legend.labels.boxHeight = 7;
+  Chart.defaults.plugins.legend.labels.padding = 14;
+  Chart.defaults.plugins.tooltip.backgroundColor = '#0f172a';
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+  Chart.defaults.plugins.tooltip.usePointStyle = true;
+
+  var charts = {};
+  function mount(key, canvas, config) {
+    if (charts[key]) charts[key].destroy();
+    charts[key] = new Chart(canvas, config);
+  }
+
+  function axisLabels(chart) {
+    if (chart.x !== '_country') return chart.labels;
+    return chart.labels.map(countryName);
+  }
+  function clip(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  function seriesLabel(ds, chart) {
+    if (ds.metric) return (ds.metric === 'sum' ? 'Total ' : 'Avg ') + ds.label;
+    if (ds.other || ds.field == null) return ds.label;
+    var value = ds.field === '_country' ? countryName(ds.value) : ds.value;
+    return chart.multi_field ? clip(ds.label, 16) + ': ' + value : value;
+  }
+
+  var DOUGHNUT_SLICES = 8;
+  function foldTail(labels, data) {
+    if (labels.length <= DOUGHNUT_SLICES + 1) return { labels: labels, data: data };
+    var head = labels.slice(0, DOUGHNUT_SLICES).map(function (l, i) { return [l, data[i]]; })
+      .filter(function (p) { return p[0] !== 'Other'; });
+    var kept = head.reduce(function (a, p) { return a + p[1]; }, 0);
+    var total = data.reduce(function (a, b) { return a + b; }, 0);
+    return {
+      labels: head.map(function (p) { return p[0]; }).concat(['Other']),
+      data: head.map(function (p) { return p[1]; }).concat([total - kept])
+    };
+  }
+
+  function buildConfig(type, chart) {
+    var labels = axisLabels(chart);
+    if (type === 'doughnut') {
+      var folded = foldTail(labels, chart.datasets[0] ? chart.datasets[0].data : []);
+      labels = folded.labels;
+      var data = folded.data;
+      return {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{
+          data: data,
+          backgroundColor: labels.map(function (l, i) { return l === 'Other' ? OTHER : PALETTE[i % PALETTE.length]; }),
+          borderColor: '#fff', borderWidth: 2, hoverOffset: 6
+        }] },
+        options: {
+          maintainAspectRatio: false, cutout: '62%',
+          plugins: {
+            legend: { position: 'right' },
+            tooltip: { callbacks: { label: function (ctx) {
+              var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0) || 1;
+              return ' ' + ctx.label + ': ' + fmt(ctx.parsed) + ' (' + Math.round(ctx.parsed / total * 100) + '%)';
+            } } }
+          }
+        }
+      };
+    }
+    var isLine = type === 'line' || type === 'area';
+    var stacked = type === 'stacked' || (type === 'area' && chart.datasets.length > 1);
+    var dense = labels.length > 40;
+    var hasAvg = chart.datasets.some(function (d) { return d.metric === 'avg'; });
+    var single = chart.datasets.length === 1;
+    var datasets = chart.datasets.map(function (ds, i) {
+      var c = ds.other ? OTHER : single ? '#4f7cff' : PALETTE[i % PALETTE.length];
+      var base = { label: seriesLabel(ds, chart), data: ds.data };
+      if (isLine) {
+        base.borderColor = c;
+        base.backgroundColor = type === 'area' ? hexA(c, chart.datasets.length > 1 ? 0.55 : 0.18) : c;
+        base.fill = type === 'area' ? (stacked && i > 0 ? '-1' : 'origin') : false;
+        base.tension = 0.35;
+        base.borderWidth = 2;
+        base.pointRadius = dense ? 0 : 2.5;
+        base.pointHoverRadius = 5;
+        base.pointBackgroundColor = c;
+        base.spanGaps = true;
+      } else {
+        base.backgroundColor = c;
+        base.borderRadius = stacked ? 0 : 5;
+        base.maxBarThickness = 44;
+        base.categoryPercentage = 0.72;
+        base.barPercentage = 0.92;
+      }
+      return base;
+    });
+    var horizontal = type === 'hbar';
+    var valueAxis = {
+      stacked: stacked, beginAtZero: true,
+      grid: { color: '#eef2f7' }, border: { display: false },
+      ticks: { precision: hasAvg ? undefined : 0, maxTicksLimit: 6 }
+    };
+    var catAxis = {
+      stacked: stacked, grid: { display: false }, border: { color: '#e2e8f0' },
+      ticks: { maxRotation: 0, autoSkip: true, autoSkipPadding: 14 }
+    };
+    return {
+      type: isLine ? 'line' : 'bar',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        maintainAspectRatio: false,
+        indexAxis: horizontal ? 'y' : 'x',
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: datasets.length > 1, position: 'top', align: 'end', maxHeight: 64 } },
+        scales: horizontal ? { x: valueAxis, y: catAxis } : { x: catAxis, y: valueAxis }
+      }
+    };
+  }
+
+  function sizeFor(type, chart, box) {
+    if (type === 'hbar') box.style.height = Math.max(240, chart.labels.length * 28 + 60) + 'px';
+  }
+
+  // ---------- state ----------
+  var params = new URLSearchParams(location.search);
+  var state = {
+    form: params.has('form') ? params.get('form') : ($('an-form').options[1] ? $('an-form').options[1].value : ''),
+    preset: params.get('range') || '30d',
+    start: params.get('start') || '',
+    end: params.get('end') || '',
+    gran: params.get('group') || 'auto',
+    mapField: '_country',
+    tsType: 'area'
+  };
+  var lastData = null;
+  var savedCharts = [];
+
+  function rangeFor(preset) {
+    var t = new Date(); t.setHours(0, 0, 0, 0);
+    var s = new Date(t);
+    switch (preset) {
+      case '7d': s.setDate(t.getDate() - 6); break;
+      case '30d': s.setDate(t.getDate() - 29); break;
+      case '90d': s.setDate(t.getDate() - 89); break;
+      case '12m': s.setFullYear(t.getFullYear() - 1); s.setDate(s.getDate() + 1); break;
+      case 'ytd': s.setMonth(0, 1); break;
+      case 'all': return { start: '', end: iso(t) };
+      case 'custom': return { start: state.start, end: state.end };
+    }
+    return { start: iso(s), end: iso(t) };
+  }
+
+  function syncUrl() {
+    var p = new URLSearchParams();
+    p.set('form', state.form);
+    p.set('range', state.preset);
+    if (state.preset === 'custom') { p.set('start', state.start); p.set('end', state.end); }
+    if (state.gran !== 'auto') p.set('group', state.gran);
+    history.replaceState(null, '', location.pathname + '?' + p.toString());
+  }
+
+  function setSeg(container, value) {
+    Array.prototype.forEach.call(container.querySelectorAll('button'), function (b) {
+      b.classList.toggle('is-active', b.dataset.v === value);
+    });
+  }
+
+  function dimensions() {
+    var dims = [{ key: '_country', label: 'Country', type: 'country' }];
+    if (!state.form) dims.push({ key: '_form', label: 'Form', type: 'form' });
+    ((lastData && lastData.fields) || []).forEach(function (f) {
+      if (!FREE_TEXT[f.type]) dims.push(f);
+    });
+    return dims;
+  }
+  function dimLabel(key) {
+    if (X_LABELS[key]) return X_LABELS[key];
+    var d = dimensions().filter(function (x) { return x.key === key; })[0];
+    return d ? d.label : key;
+  }
+
+  // ---------- overview ----------
+  function load() {
+    var r = rangeFor(state.preset);
+    if (state.preset === 'custom' && (!r.start || !r.end)) return;
+    syncUrl();
+    root.classList.add('is-loading');
+    var q = new URLSearchParams({
+      form: state.form, start: r.start, end: r.end, tz: TZ,
+      granularity: state.gran, map_field: state.mapField
+    });
+    api('/admin/analytics/data?' + q.toString()).then(function (data) {
+      lastData = data;
+      renderHeader(data);
+      renderKpis(data.kpis);
+      renderTimeseries();
+      renderMap(data);
+      renderCyclic(data);
+      renderBreakdowns(data);
+      return loadCustomCharts();
+    }).catch(function (err) {
+      $('an-range-label').textContent = 'Could not load analytics: ' + err.message;
+    }).then(function () {
+      root.classList.remove('is-loading');
+    });
+  }
+
+  function renderHeader(data) {
+    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+    var s = parseISO(data.range.start).toLocaleDateString(undefined, opts);
+    var e = parseISO(data.range.end).toLocaleDateString(undefined, opts);
+    $('an-range-label').textContent = s + ' – ' + e + ' · ' + fmt(data.range.days) + ' days · grouped by ' + data.granularity +
+      (data.truncated ? ' · showing the first 200,000 submissions' : '');
+    if (state.preset !== 'custom') { $('an-start').value = data.range.start; $('an-end').value = data.range.end; }
+    $('an-tz-note').textContent = TZ;
+  }
+
+  function renderKpis(k) {
+    $('k-total').textContent = fmt(k.total);
+    var change = $('k-change');
+    change.textContent = '';
+    if (k.change_pct == null) {
+      change.textContent = k.previous_total ? '' : 'No data in previous period';
+    } else {
+      var dir = k.change_pct > 0 ? 'up' : k.change_pct < 0 ? 'down' : 'flat';
+      var badge = el('span', 'an-delta ' + dir, (k.change_pct > 0 ? '▲ ' : k.change_pct < 0 ? '▼ ' : '') + Math.abs(k.change_pct) + '%');
+      change.appendChild(badge);
+      change.appendChild(document.createTextNode('vs previous period'));
+    }
+    $('k-avg').textContent = fmt(k.daily_avg);
+    $('k-avg-foot').textContent = 'submissions per day';
+    $('k-countries').textContent = fmt(k.countries);
+    $('k-top-country').textContent = k.top_country ? 'Top: ' + countryName(k.top_country) : 'No location data yet';
+    $('k-busiest').textContent = k.busiest_weekday || '–';
+  }
+
+  function renderTimeseries() {
+    if (!lastData) return;
+    var cfg = buildConfig(state.tsType === 'bar' ? 'bar' : 'area', lastData.timeseries);
+    cfg.data.datasets[0].borderColor = '#2563eb';
+    cfg.data.datasets[0].pointBackgroundColor = '#2563eb';
+    cfg.data.datasets[0].backgroundColor = state.tsType === 'bar' ? '#4f7cff' : hexA('#2563eb', 0.12);
+    mount('ts', $('c-ts'), cfg);
+  }
+
+  function renderCyclic(data) {
+    [['weekday', 'c-weekday'], ['hour', 'c-hour']].forEach(function (pair) {
+      var chart = data[pair[0]];
+      var cfg = buildConfig('bar', chart);
+      var values = chart.datasets[0].data;
+      var max = Math.max.apply(null, values);
+      cfg.data.datasets[0].backgroundColor = values.map(function (v) { return v === max && max > 0 ? '#2563eb' : '#c7d7fe'; });
+      cfg.data.datasets[0].label = 'Submissions';
+      mount(pair[0], $(pair[1]), cfg);
+    });
+  }
+
+  // ---------- map ----------
+  var mapInstance = null;
+  function renderMap(data) {
+    var select = $('an-map-field');
+    var current = data.map.field;
+    select.innerHTML = '';
+    select.appendChild(new Option('Visitor location', '_country'));
+    data.fields.forEach(function (f) {
+      if (f.type === 'select' || f.type === 'text') select.appendChild(new Option('Field: ' + f.label, f.key));
+    });
+    select.value = current;
+
+    var values = {}, unmatched = 0;
+    Object.keys(data.map.values).forEach(function (k) {
+      var code = current === '_country' ? k : toCountryCode(k);
+      if (code) values[code] = (values[code] || 0) + data.map.values[k];
+      else unmatched += data.map.values[k];
+    });
+
+    var max = 0;
+    Object.keys(values).forEach(function (c) { max = Math.max(max, values[c]); });
+    var buckets = {};
+    Object.keys(values).forEach(function (c) {
+      buckets[c] = 'l' + Math.min(SHADES.length - 1, Math.floor(Math.sqrt(values[c] / max) * SHADES.length));
+    });
+    var scale = {};
+    SHADES.forEach(function (color, i) { scale['l' + i] = color; });
+
+    if (mapInstance) { try { mapInstance.destroy(); } catch (e) { /* already gone */ } }
+    $('an-map').innerHTML = '';
+    mapInstance = new jsVectorMap({
+      selector: '#an-map',
+      map: 'world',
+      zoomButtons: true,
+      zoomOnScroll: false,
+      regionStyle: {
+        initial: { fill: '#e5e9f0', stroke: '#ffffff', strokeWidth: 0.4, fillOpacity: 1 },
+        hover: { fillOpacity: 0.75, cursor: 'pointer' }
+      },
+      series: { regions: [{ attribute: 'fill', scale: scale, values: buckets }] },
+      onRegionTooltipShow: function (event, tooltip, code) {
+        var n = values[code] || 0;
+        tooltip.text(tooltip.text() + ' · ' + fmt(n) + ' submission' + (n === 1 ? '' : 's'));
+      }
+    });
+
+    var legend = $('an-legend');
+    legend.innerHTML = '';
+    legend.appendChild(el('span', null, 'Fewer'));
+    SHADES.forEach(function (c) { var i = el('i'); i.style.setProperty('--c', c); legend.appendChild(i); });
+    legend.appendChild(el('span', null, 'More'));
+
+    var note = '';
+    if (current === '_country' && data.map.unknown) note = fmt(data.map.unknown) + ' without a known location';
+    if (current !== '_country' && unmatched) note = fmt(unmatched) + ' answers didn’t match a country';
+    $('an-map-note').textContent = note;
+
+    renderTopList(current, values, data);
+  }
+
+  function renderTopList(field, values, data) {
+    var list = $('an-toplist');
+    list.innerHTML = '';
+    var label = field === '_country' ? 'countries' : dimLabel(field).toLowerCase();
+    $('an-top-title').textContent = 'Top ' + label;
+    var entries = Object.keys(values).map(function (c) { return [c, values[c]]; })
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 12);
+    if (!entries.length) {
+      var empty = el('li', 'an-note', field === '_country'
+        ? 'No visitor locations yet. Countries are read from proxy headers (e.g. Cloudflare) or the GEOIP_DB_PATH database.'
+        : 'No answers matched a country name or code.');
+      empty.style.display = 'block';
+      list.appendChild(empty);
+      return;
+    }
+    var total = entries.reduce(function (a, e) { return a + e[1]; }, 0);
+    var top = entries[0][1];
+    entries.forEach(function (e) {
+      var li = el('li');
+      li.appendChild(el('span', 'an-code', e[0]));
+      li.appendChild(el('span', 'an-top-name', countryName(e[0])));
+      var count = el('span', 'an-top-count', fmt(e[1]));
+      count.appendChild(el('small', null, Math.round(e[1] / total * 100) + '%'));
+      li.appendChild(count);
+      var bar = el('div', 'an-bar');
+      var fill = el('span');
+      fill.style.width = (e[1] / top * 100) + '%';
+      bar.appendChild(fill);
+      li.appendChild(bar);
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- breakdowns ----------
+  function renderBreakdowns(data) {
+    var grid = $('an-breakdowns');
+    Object.keys(charts).forEach(function (k) { if (k.indexOf('bd:') === 0) { charts[k].destroy(); delete charts[k]; } });
+    grid.innerHTML = '';
+    if (!data.breakdowns.length) {
+      grid.appendChild(el('div', 'an-empty', state.form
+        ? 'No choice or number answers in this date range.'
+        : 'Pick a form to see how people answered each field.'));
+      return;
+    }
+    data.breakdowns.forEach(function (b, idx) {
+      var card = el('section', 'an-card');
+      var head = el('header', 'an-card-head');
+      head.appendChild(el('h3', null, b.label));
+      var actions = el('div', 'an-card-actions');
+      actions.appendChild(el('span', 'an-pill', b.type));
+      var trend = el('button', 'an-icon-btn', 'Over time');
+      trend.type = 'button';
+      trend.title = 'Chart this field over time';
+      trend.addEventListener('click', function () {
+        openBuilder(null, {
+          title: b.label + ' over time', type: b.kind === 'number' ? 'line' : 'stacked',
+          x: lastData.granularity, fields: [b.key], metric: b.kind === 'number' ? 'avg' : 'count'
+        });
+      });
+      actions.appendChild(trend);
+      head.appendChild(actions);
+      card.appendChild(head);
+
+      var box = el('div', 'an-chart an-chart-sm');
+      var canvas = el('canvas');
+      box.appendChild(canvas);
+      card.appendChild(box);
+
+      var chart = {
+        x: b.key,
+        labels: b.values.map(function (v) { return v[0]; }),
+        datasets: [{ field: null, label: 'Submissions', data: b.values.map(function (v) { return v[1]; }) }]
+      };
+      var type = b.kind === 'number' ? 'bar' : (b.values.length <= 5 ? 'doughnut' : 'hbar');
+      var cfg = buildConfig(type, chart);
+      if (type !== 'doughnut') {
+        cfg.data.datasets[0].backgroundColor = chart.labels.map(function (l) { return l === 'Other' ? OTHER : '#4f7cff'; });
+        cfg.options.plugins.legend.display = false;
+      }
+      sizeFor(type, chart, box);
+      if (b.stats) {
+        var stats = el('div', 'an-stats');
+        [['Avg', b.stats.avg], ['Median', b.stats.median], ['Min', b.stats.min], ['Max', b.stats.max], ['Answers', b.stats.count]]
+          .forEach(function (s) {
+            var span = el('span', null, s[0] + ' ');
+            span.appendChild(el('b', null, fmt(s[1])));
+            stats.appendChild(span);
+          });
+        card.appendChild(stats);
+      }
+      grid.appendChild(card);
+      mount('bd:' + idx, canvas, cfg);
+    });
+  }
+
+  // ---------- custom charts ----------
+  function describe(cfg) {
+    var parts = [];
+    if (cfg.metric !== 'count') parts.push((cfg.metric === 'sum' ? 'Sum of ' : 'Average ') + cfg.fields.map(dimLabel).join(', '));
+    else if (cfg.fields.length) parts.push(cfg.fields.map(dimLabel).join(' + '));
+    else parts.push('Submissions');
+    parts.push('by ' + dimLabel(cfg.x));
+    parts.push(TYPE_LABELS[cfg.type]);
+    return parts.join(' · ');
+  }
+
+  function loadCustomCharts() {
+    var wrap = $('an-custom-charts');
+    return api('/admin/analytics/charts?form=' + encodeURIComponent(state.form)).then(function (res) {
+      savedCharts = res.charts;
+      Object.keys(charts).forEach(function (k) { if (k.indexOf('cc:') === 0) { charts[k].destroy(); delete charts[k]; } });
+      wrap.innerHTML = '';
+      if (!savedCharts.length) {
+        wrap.appendChild(el('div', 'an-empty', 'No custom charts yet. Use “+ Add chart” to compare fields over time, by weekday, by country and more.'));
+        return;
+      }
+      var r = rangeFor(state.preset);
+      return api('/admin/analytics/chart-data', {
+        method: 'POST',
+        body: JSON.stringify({ form: state.form, start: r.start, end: r.end, tz: TZ, configs: savedCharts.map(function (c) { return c.config; }) })
+      }).then(function (out) {
+        savedCharts.forEach(function (saved, i) {
+          var result = out.charts[i];
+          var card = el('section', 'an-card');
+          var head = el('header', 'an-card-head');
+          head.appendChild(el('h3', null, saved.config.title));
+          var actions = el('div', 'an-card-actions');
+          var edit = el('button', 'an-icon-btn', 'Edit');
+          edit.type = 'button';
+          edit.addEventListener('click', function () { openBuilder(saved.id, saved.config); });
+          var del = el('button', 'an-icon-btn danger', 'Delete');
+          del.type = 'button';
+          del.addEventListener('click', function () {
+            if (!confirm('Delete the chart “' + saved.config.title + '”?')) return;
+            api('/admin/analytics/charts/' + saved.id, { method: 'DELETE' }).then(loadCustomCharts)
+              .catch(function (err) { alert(err.message); });
+          });
+          actions.appendChild(edit);
+          actions.appendChild(del);
+          head.appendChild(actions);
+          card.appendChild(head);
+          if (result.error) {
+            card.appendChild(el('p', 'an-error', 'This chart can’t be drawn: ' + result.error + '. Edit it to pick different fields.'));
+          } else {
+            var box = el('div', 'an-chart');
+            var canvas = el('canvas');
+            box.appendChild(canvas);
+            card.appendChild(box);
+            sizeFor(result.config.type, result, box);
+            card.appendChild(el('p', 'an-card-meta', describe(result.config)));
+            wrap.appendChild(card);
+            mount('cc:' + saved.id, canvas, buildConfig(result.config.type, result));
+            return;
+          }
+          wrap.appendChild(card);
+        });
+      });
+    });
+  }
+
+  // ---------- builder ----------
+  var builder = { id: null, cfg: null, timer: null };
+
+  function builderConfig() {
+    return {
+      title: $('b-title').value.trim(),
+      type: builder.cfg.type,
+      x: $('b-x').value,
+      fields: builder.cfg.fields.slice(),
+      metric: $('b-metric').value
+    };
+  }
+
+  function fillXOptions(cfg) {
+    var sel = $('b-x');
+    sel.innerHTML = '';
+    var doughnut = cfg.type === 'doughnut';
+    if (!doughnut) {
+      var time = el('optgroup'); time.label = 'Time';
+      [['day', 'Day'], ['week', 'Week'], ['month', 'Month']].forEach(function (o) { time.appendChild(new Option(o[1], o[0])); });
+      sel.appendChild(time);
+    }
+    var cycle = el('optgroup'); cycle.label = 'Repeating';
+    [['weekday', 'Day of week'], ['hour', 'Hour of day']].forEach(function (o) { cycle.appendChild(new Option(o[1], o[0])); });
+    sel.appendChild(cycle);
+    var dims = el('optgroup'); dims.label = 'Fields';
+    dimensions().forEach(function (d) { dims.appendChild(new Option(d.label, d.key)); });
+    sel.appendChild(dims);
+    sel.value = cfg.x;
+    if (sel.value !== cfg.x) sel.value = doughnut ? '_country' : 'month';
+  }
+
+  function renderChips() {
+    var cfg = builder.cfg;
+    var wrap = $('b-fields');
+    wrap.innerHTML = '';
+    var numeric = $('b-metric').value !== 'count';
+    dimensions().forEach(function (d) {
+      var chip = el('button', 'an-chip', d.label);
+      chip.type = 'button';
+      var on = cfg.fields.indexOf(d.key) !== -1;
+      chip.classList.toggle('is-active', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+      chip.disabled = numeric && d.type !== 'number';
+      chip.addEventListener('click', function () {
+        var i = cfg.fields.indexOf(d.key);
+        if (i === -1) {
+          if (cfg.fields.length >= 5) return;
+          cfg.fields.push(d.key);
+        } else {
+          cfg.fields.splice(i, 1);
+        }
+        renderChips();
+        schedulePreview();
+      });
+      wrap.appendChild(chip);
+    });
+    var hasNumber = dimensions().some(function (d) { return d.type === 'number'; });
+    $('b-metric').querySelector('[value=sum]').disabled = !hasNumber;
+    $('b-metric').querySelector('[value=avg]').disabled = !hasNumber;
+  }
+
+  function syncBuilderUi() {
+    var cfg = builder.cfg;
+    setSeg($('b-type'), cfg.type);
+    var doughnut = cfg.type === 'doughnut';
+    $('b-fields-wrap').hidden = doughnut;
+    $('b-metric-wrap').hidden = doughnut;
+    fillXOptions(cfg);
+    renderChips();
+  }
+
+  function openBuilder(id, cfg) {
+    builder.id = id;
+    builder.cfg = {
+      title: cfg ? cfg.title : '',
+      type: cfg ? cfg.type : 'stacked',
+      x: cfg ? cfg.x : (lastData ? lastData.granularity : 'month'),
+      fields: cfg ? cfg.fields.slice() : [],
+      metric: cfg ? cfg.metric : 'count'
+    };
+    $('b-heading').textContent = id ? 'Edit chart' : 'New chart';
+    $('b-title').value = builder.cfg.title;
+    $('b-metric').value = builder.cfg.metric;
+    $('b-error').hidden = true;
+    syncBuilderUi();
+    $('an-builder').hidden = false;
+    $('b-title').focus();
+    preview();
+  }
+
+  function closeBuilder() {
+    $('an-builder').hidden = true;
+    if (charts.preview) { charts.preview.destroy(); delete charts.preview; }
+  }
+
+  function schedulePreview() {
+    clearTimeout(builder.timer);
+    builder.timer = setTimeout(preview, 250);
+  }
+
+  function preview() {
+    var cfg = builderConfig();
+    var r = rangeFor(state.preset);
+    var err = $('b-error');
+    api('/admin/analytics/chart-data', {
+      method: 'POST',
+      body: JSON.stringify({ form: state.form, start: r.start, end: r.end, tz: TZ, configs: [cfg] })
+    }).then(function (out) {
+      var result = out.charts[0];
+      if (result.error) throw new Error(result.error);
+      err.hidden = true;
+      mount('preview', $('c-preview'), buildConfig(result.config.type, result));
+    }).catch(function (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+    });
+  }
+
+  function saveBuilder() {
+    var cfg = builderConfig();
+    if (!cfg.title) cfg.title = describe({ type: cfg.type, x: cfg.x, fields: cfg.fields, metric: cfg.metric }).split(' · ').slice(0, 2).join(' ');
+    var req = builder.id
+      ? api('/admin/analytics/charts/' + builder.id, { method: 'PUT', body: JSON.stringify({ config: cfg }) })
+      : api('/admin/analytics/charts', { method: 'POST', body: JSON.stringify({ form: state.form, config: cfg }) });
+    $('b-save').disabled = true;
+    req.then(function () {
+      closeBuilder();
+      return loadCustomCharts();
+    }).catch(function (e) {
+      $('b-error').textContent = e.message;
+      $('b-error').hidden = false;
+    }).then(function () { $('b-save').disabled = false; });
+  }
+
+  // ---------- wiring ----------
+  $('an-form').value = state.form;
+  if ($('an-form').value !== state.form) state.form = $('an-form').value;
+  $('an-preset').value = state.preset;
+  $('an-custom').hidden = state.preset !== 'custom';
+  $('an-start').value = state.start;
+  $('an-end').value = state.end;
+  setSeg($('an-gran'), state.gran);
+  setSeg($('an-ts-type'), state.tsType);
+
+  $('an-form').addEventListener('change', function () { state.form = this.value; state.mapField = '_country'; load(); });
+  $('an-preset').addEventListener('change', function () {
+    state.preset = this.value;
+    $('an-custom').hidden = state.preset !== 'custom';
+    if (state.preset === 'custom') {
+      state.start = $('an-start').value;
+      state.end = $('an-end').value;
+    }
+    load();
+  });
+  ['an-start', 'an-end'].forEach(function (id) {
+    $(id).addEventListener('change', function () {
+      state.start = $('an-start').value;
+      state.end = $('an-end').value;
+      if (state.preset === 'custom') load();
+    });
+  });
+  $('an-gran').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    state.gran = b.dataset.v;
+    setSeg(this, state.gran);
+    load();
+  });
+  $('an-ts-type').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    state.tsType = b.dataset.v;
+    setSeg(this, state.tsType);
+    renderTimeseries();
+  });
+  $('an-map-field').addEventListener('change', function () { state.mapField = this.value; load(); });
+
+  $('an-add').addEventListener('click', function () { openBuilder(null, null); });
+  $('b-type').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    builder.cfg.type = b.dataset.v;
+    builder.cfg.x = $('b-x').value;
+    syncBuilderUi();
+    schedulePreview();
+  });
+  $('b-x').addEventListener('change', schedulePreview);
+  $('b-metric').addEventListener('change', function () {
+    if (this.value !== 'count') {
+      var numberKeys = dimensions().filter(function (d) { return d.type === 'number'; }).map(function (d) { return d.key; });
+      builder.cfg.fields = builder.cfg.fields.filter(function (f) { return numberKeys.indexOf(f) !== -1; });
+      if (!builder.cfg.fields.length && numberKeys.length) builder.cfg.fields = [numberKeys[0]];
+    }
+    renderChips();
+    schedulePreview();
+  });
+  $('b-save').addEventListener('click', saveBuilder);
+  Array.prototype.forEach.call(document.querySelectorAll('#an-builder [data-close]'), function (b) {
+    b.addEventListener('click', closeBuilder);
+  });
+  $('an-builder').addEventListener('click', function (e) { if (e.target === this) closeBuilder(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('an-builder').hidden) closeBuilder(); });
+
+  load();
+})();
+</script>

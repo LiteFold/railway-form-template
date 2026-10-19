@@ -41,82 +41,175 @@
   </div>
 
 <style>
-.field-builder { margin-bottom: 16px; min-height: 24px; padding: 8px; border: 1px dashed transparent; border-radius: 6px; }
+.field-builder { margin-bottom: 12px; min-height: 24px; }
 .field-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.field-card-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-#field-builder .field-card-row label {
-   font-size: 0.75rem;
-   font-weight: 500;
-   color: #666;
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   white-space: nowrap;
-   line-height: 1;
- }
-#field-builder .field-card-row input,
-#field-builder .field-card-row select {
-   padding: 4px 8px;
-   border: 1px solid #ddd;
-   border-radius: 4px;
-   font-size: 0.8125rem;
-   outline: none;
-   margin-bottom: 0;
- }
-#field-builder .field-card-row input:focus,
-#field-builder .field-card-row select:focus {
-   border-color: #2563eb;
- }
-.field-card-row input[type="text"] { width: auto; min-width: 80px; max-width: 160px; padding: 4px 8px; }
-.field-card-row input[type="checkbox"] { width: auto; }
-.field-card-row label span { line-height: 29px; display: inline-block; }
-.field-card-actions {
-   display: flex;
-   gap: 4px;
-   align-items: center;
-   margin-left: auto;
- }
-.field-card-actions button {
-  padding: 2px 8px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #ddd;
   background: #fff;
-  color: #555;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
-.field-card-actions button:hover { background: #f0f0f0; }
-.field-card-actions .btn-del { color: #ef4444; border-color: #fecaca; }
-.field-card-actions .btn-del:hover { background: #fef2f2; }
-.add-field-btn {
+.field-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.field-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.field-card-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
-  font-size: 0.8125rem;
-  border-radius: 6px;
-  cursor: pointer;
-  border: 1px dashed #2563eb;
-  background: transparent;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #eff6ff;
   color: #2563eb;
-  margin-bottom: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
-.add-field-btn:hover { background: #eff6ff; }
-.field-options-input { width: 100% !important; margin-top: 4px; }
+.field-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.field-type-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.field-type-pill.type-email { background: #f3e8ff; color: #7c3aed; }
+.field-type-pill.type-textarea { background: #ccfbf1; color: #0d9488; }
+.field-type-pill.type-select { background: #fef3c7; color: #b45309; }
+.field-type-pill.type-checkbox { background: #fce7f3; color: #be185d; }
+.field-type-pill.type-url { background: #e0e7ff; color: #4338ca; }
+.field-type-pill.type-number, .field-type-pill.type-tel { background: #e2e8f0; color: #475569; }
+.field-card-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover { background: #f1f5f9; color: #334155; }
+.icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.icon-btn.icon-btn-del:hover { background: #fef2f2; color: #dc2626; }
+.field-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-group-full { grid-column: 1 / -1; }
+#field-builder .field-group-label {
+  display: block;
+  margin-bottom: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.field-group input[type="text"],
+.field-group select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  outline: none;
+  margin-bottom: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #fff;
+}
+.field-group input[type="text"]:focus,
+.field-group select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+#field-builder .required-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+  padding: 7px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+#field-builder .required-chip input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #2563eb;
+  cursor: pointer;
+  margin: 0;
+}
+#field-builder .required-chip:has(input:checked) {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+.field-options-input { width: 100% !important; }
+.add-field-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px dashed #cbd5e1;
+  background: transparent;
+  color: #64748b;
+  margin-bottom: 16px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.add-field-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
 </style>
 
 <script>
@@ -143,39 +236,37 @@
       var html = '';
       for (var i = 0; i < fields.length; i++) {
         var f = fields[i];
+        var type = f.type || 'text';
 
         var optsHtml = '';
-        if (f.type === 'select') {
+        if (type === 'select') {
           var vals = (f.options || []).join(', ');
-          optsHtml = '<input type="text" class="field-options-input" value="' + vals.replace(/"/g, '&quot;') + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options">';
+          optsHtml = '<div class="field-group field-group-full"><label class="field-group-label">Options</label><input type="text" class="field-options-input" value="' + vals.replace(/"/g, '&quot;') + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options"></div>';
         }
+
         html += '<div class="field-card" data-field-idx="' + i + '">';
-        // Row 1: Label + Required checkbox + action buttons
-        html += '<div class="field-card-row">';
-        html += '<label><span>Label</span> <input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></label>';
-        html += '<label><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label>';
+        // Card header: index badge, type pill, reorder/delete actions
+        html += '<div class="field-card-head">';
+        html += '<span class="field-card-badge">' + (i + 1) + '</span>';
+        html += '<span class="field-type-pill type-' + type + '">' + type + '</span>';
         html += '<div class="field-card-actions">';
-        if (i > 0) html += '<button data-action="move-up" data-field-idx="' + i + '">▲</button>';
-        if (i < fields.length - 1) html += '<button data-action="move-down" data-field-idx="' + i + '">▼</button>';
-        html += '<button class="btn-del" data-action="delete" data-field-idx="' + i + '">✕</button>';
+        html += '<button type="button" class="icon-btn" data-action="move-up" data-field-idx="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="Move up">&#9650;</button>';
+        html += '<button type="button" class="icon-btn" data-action="move-down" data-field-idx="' + i + '"' + (i === fields.length - 1 ? ' disabled' : '') + ' title="Move down">&#9660;</button>';
+        html += '<button type="button" class="icon-btn icon-btn-del" data-action="delete" data-field-idx="' + i + '" title="Remove field">&#10005;</button>';
         html += '</div>';
         html += '</div>';
-        // Row 2: Type
-        html += '<div class="field-card-row">';
-        html += '<label>Type <select data-field-idx="' + i + '" data-field-key="type">';
+        // Card body: Label/Type, optional Options, Placeholder/Required
+        html += '<div class="field-card-grid">';
+        html += '<div class="field-group"><label class="field-group-label">Label</label><input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></div>';
+        html += '<div class="field-group"><label class="field-group-label">Type</label><select data-field-idx="' + i + '" data-field-key="type">';
         var types = ['text','email','textarea','select','checkbox','tel','number','url'];
         for (var t = 0; t < types.length; t++) {
-          html += '<option value="' + types[t] + '"' + (f.type === types[t] ? ' selected' : '') + '>' + types[t] + '</option>';
+          html += '<option value="' + types[t] + '"' + (type === types[t] ? ' selected' : '') + '>' + types[t] + '</option>';
         }
-        html += '</select></label>';
-        html += '</div>';
-        // Row 3 (conditional): options input for select type
-        if (optsHtml) {
-          html += '<div class="field-card-row">' + optsHtml + '</div>';
-        }
-        // Row 4: Placeholder
-        html += '<div class="field-card-row">';
-        html += '<label><span>Placeholder</span> <input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></label>';
+        html += '</select></div>';
+        if (optsHtml) html += optsHtml;
+        html += '<div class="field-group"><label class="field-group-label">Placeholder</label><input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></div>';
+        html += '<div class="field-group"><label class="field-group-label">&nbsp;</label><label class="required-chip"><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label></div>';
         html += '</div>';
         html += '</div>';
       }

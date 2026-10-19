@@ -5,11 +5,28 @@
       <span class="badge {{ 'badge-unread' if not submission_detail['is_read'] else 'badge-read' }}">{{ 'unread' if not submission_detail['is_read'] else 'read' }}</span>
     </p>
   </div>
-  <div>
+  <div class="detail-header-actions">
     <a href="/admin" class="btn btn-ghost" hx-get="/admin" hx-target="main.content" hx-push-url="true">&larr; Back</a>
+    <button
+      class="btn btn-ghost"
+      hx-get="/admin/submission/{{ submission_detail['id'] }}/toggle"
+      hx-target="main.content"
+    >
+      {{ 'Mark read' if not submission_detail['is_read'] else 'Mark unread' }}
+    </button>
+    <button
+      class="btn btn-danger"
+      hx-delete="/admin/submission/{{ submission_detail['id'] }}"
+      hx-target="main.content"
+      hx-swap="innerHTML"
+      hx-confirm="Delete this submission?"
+    >
+      Delete
+    </button>
   </div>
 </div>
 
+<div class="detail-layout">
 <div class="detail-card">
   <h2 class="detail-section-title">Form Data</h2>
   {% set data = submission_detail['data'] %}
@@ -37,47 +54,78 @@
   {% endif %}
 </div>
 
-<div class="detail-card">
-  <h2 class="detail-section-title">Metadata</h2>
-  <div class="detail-rows">
-    <pre class="detail-json">{{ submission_detail['metadata'] | tojson(indent=2) }}</pre>
+<div class="detail-card" id="meta-card">
+  <div class="detail-card-head">
+    <h2 class="detail-section-title">Metadata</h2>
+    <div class="meta-tabs" role="group" aria-label="Metadata view">
+      <button type="button" class="is-active" data-view="details">Details</button>
+      <button type="button" data-view="json">JSON</button>
+    </div>
   </div>
+  <div class="detail-rows" id="meta-details"></div>
+  <div id="meta-json" hidden>
+    <button type="button" class="meta-copy" id="meta-copy">Copy</button>
+    <pre class="detail-json" id="meta-json-pre"></pre>
+  </div>
+  <script type="application/json" id="meta-data">{{ submission_detail['metadata'] | tojson }}</script>
 </div>
-
-<div class="detail-actions">
-  <button
-    class="btn btn-ghost"
-    hx-get="/admin/submission/{{ submission_detail['id'] }}/toggle"
-    hx-target="main.content"
-  >
-    {{ 'Mark read' if not submission_detail['is_read'] else 'Mark unread' }}
-  </button>
-  <button
-    class="btn btn-danger"
-    hx-delete="/admin/submission/{{ submission_detail['id'] }}"
-    hx-target="main.content"
-    hx-swap="innerHTML"
-    hx-confirm="Delete this submission?"
-  >
-    Delete
-  </button>
 </div>
 
 <style>
+  .detail-header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    max-width: 1100px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1000px) {
+    .detail-layout { grid-template-columns: minmax(0, 1fr); }
+  }
   .detail-card {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     padding: 24px;
-    margin-bottom: 16px;
-    max-width: 720px;
+    min-width: 0;
   }
+  .detail-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .detail-card-head .detail-section-title { margin: 0; padding: 0; border: 0; }
+  .meta-tabs { display: inline-flex; padding: 3px; background: #eef1f6; border-radius: 8px; gap: 2px; }
+  .meta-tabs button {
+    font-family: inherit; font-size: 0.75rem; font-weight: 600; color: #64748b;
+    border: 0; background: transparent; padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .meta-tabs button:hover { color: #0f172a; }
+  .meta-tabs button.is-active { background: #fff; color: #0f172a; box-shadow: 0 1px 2px rgba(15,23,42,0.1); }
+  #meta-json { position: relative; }
+  .meta-copy {
+    position: absolute; top: 8px; right: 8px; z-index: 1;
+    font-family: inherit; font-size: 0.6875rem; font-weight: 600; color: #475569;
+    border: 1px solid #dfe4ec; background: #fff; border-radius: 6px; padding: 3px 9px; cursor: pointer;
+  }
+  .meta-copy:hover { background: #f1f5f9; }
+  .meta-sub { display: block; margin-top: 2px; font-size: 0.75rem; color: #94a3b8; word-break: break-all; }
+  .meta-mono { font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace; font-size: 0.8125rem; }
+  .meta-code { display: inline-block; margin-left: 6px; padding: 1px 6px; font-size: 0.625rem; font-weight: 700; color: #475569; background: #f1f5f9; border-radius: 4px; vertical-align: 1px; }
+  .meta-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 0.6875rem; font-weight: 600; color: #64748b; background: #f1f5f9; border-radius: 20px; }
+  #meta-details .detail-label { width: 110px; }
   .detail-section-title {
     font-size: 0.8125rem;
     font-weight: 600;
     color: #888;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid #f0f0f0;
@@ -119,6 +167,7 @@
   }
   .detail-json {
     background: #f8f9fa;
+    color: #1e293b;
     border: 1px solid #e9ecef;
     border-radius: 6px;
     padding: 16px;
@@ -129,13 +178,135 @@
     white-space: pre;
     margin: 0;
   }
-  .detail-actions {
-    display: flex;
-    gap: 8px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    padding: 24px;
-    max-width: 720px;
-  }
 </style>
+
+<script>
+(function () {
+  var card = document.getElementById('meta-card');
+  if (!card) return;
+  var details = document.getElementById('meta-details');
+  var jsonBox = document.getElementById('meta-json');
+  var pre = document.getElementById('meta-json-pre');
+  var meta;
+  try { meta = JSON.parse(document.getElementById('meta-data').textContent); } catch (e) { meta = null; }
+  pre.textContent = JSON.stringify(meta, null, 2);
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function row(label, build) {
+    var r = el('div', 'detail-row');
+    r.appendChild(el('div', 'detail-label', label));
+    var v = el('div', 'detail-value');
+    build(v);
+    r.appendChild(v);
+    details.appendChild(r);
+  }
+  function muted(parent, text) { parent.appendChild(el('span', 'detail-null', text)); }
+  function humanize(k) {
+    return k.replace(/[_-]+/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); });
+  }
+
+  function parseUA(ua) {
+    var browser = null, os = null, m;
+    if ((m = ua.match(/Edg(?:e|A|iOS)?\/(\d+)/))) browser = 'Edge ' + m[1];
+    else if ((m = ua.match(/OPR\/(\d+)/))) browser = 'Opera ' + m[1];
+    else if ((m = ua.match(/(?:Chrome|CriOS)\/(\d+)/))) browser = 'Chrome ' + m[1];
+    else if ((m = ua.match(/(?:Firefox|FxiOS)\/(\d+)/))) browser = 'Firefox ' + m[1];
+    else if ((m = ua.match(/Version\/(\d+).*Safari/))) browser = 'Safari ' + m[1];
+    if (/Windows NT/.test(ua)) os = 'Windows';
+    else if (/Android/.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+    else if (/Mac OS X/.test(ua)) os = 'macOS';
+    else if (/CrOS/.test(ua)) os = 'ChromeOS';
+    else if (/Linux/.test(ua)) os = 'Linux';
+    var device = /bot|crawl|spider|headless/i.test(ua) ? 'Bot' : /Mobi|Android|iPhone|iPod/.test(ua) ? 'Mobile' : /iPad|Tablet/.test(ua) ? 'Tablet' : (browser || os) ? 'Desktop' : null;
+    return { browser: browser, os: os, device: device };
+  }
+
+  var known = { country: 1, ip: 1, user_agent: 1, referer: 1 };
+
+  function renderDetails() {
+    details.textContent = '';
+    if (!meta || typeof meta !== 'object' || Array.isArray(meta)) {
+      row('Raw', function (v) { v.textContent = String(JSON.stringify(meta)); });
+      return;
+    }
+
+    row('Country', function (v) {
+      var code = typeof meta.country === 'string' ? meta.country.toUpperCase() : '';
+      var name = '';
+      try { name = code ? new Intl.DisplayNames(['en'], { type: 'region' }).of(code) : ''; } catch (e) { name = ''; }
+      if (!code) { muted(v, 'Unknown'); return; }
+      v.appendChild(document.createTextNode(name && name !== code ? name : code));
+      v.appendChild(el('span', 'meta-code', code));
+    });
+
+    row('IP address', function (v) {
+      if (meta.ip) v.appendChild(el('span', 'meta-mono', meta.ip)); else muted(v, 'Unknown');
+    });
+
+    row('Browser', function (v) {
+      var ua = meta.user_agent || '';
+      if (!ua) { muted(v, 'Unknown'); return; }
+      var p = parseUA(ua);
+      var label = [p.browser, p.os].filter(Boolean).join(' on ');
+      v.appendChild(document.createTextNode(label || ua));
+      if (p.device) v.appendChild(el('span', 'meta-tag', p.device));
+      if (label) v.appendChild(el('span', 'meta-sub', ua));
+    });
+
+    row('Referrer', function (v) {
+      var ref = meta.referer || '';
+      if (!ref) { muted(v, 'Direct / none'); return; }
+      var url;
+      try { url = new URL(ref); } catch (e) { url = null; }
+      if (url && /^https?:$/.test(url.protocol)) {
+        var a = el('a', null, url.host + (url.pathname === '/' ? '' : url.pathname));
+        a.href = ref; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        v.appendChild(a);
+        v.appendChild(el('span', 'meta-sub', ref));
+      } else {
+        v.textContent = ref;
+      }
+    });
+
+    Object.keys(meta).forEach(function (k) {
+      if (known[k]) return;
+      var val = meta[k];
+      row(humanize(k), function (v) {
+        if (val === null || val === '') muted(v, '—');
+        else if (typeof val === 'boolean') v.textContent = val ? 'Yes' : 'No';
+        else if (typeof val === 'object') v.appendChild(el('span', 'meta-mono', JSON.stringify(val)));
+        else v.textContent = String(val);
+      });
+    });
+  }
+
+  function show(view) {
+    details.hidden = view !== 'details';
+    jsonBox.hidden = view !== 'json';
+    Array.prototype.forEach.call(card.querySelectorAll('.meta-tabs button'), function (b) {
+      b.classList.toggle('is-active', b.dataset.view === view);
+    });
+  }
+
+  card.querySelector('.meta-tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) show(b.dataset.view);
+  });
+  document.getElementById('meta-copy').addEventListener('click', function () {
+    var btn = this;
+    navigator.clipboard.writeText(pre.textContent).then(function () {
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    }).catch(function () { alert('Copy failed. Check clipboard permissions.'); });
+  });
+
+  renderDetails();
+  show('details');
+})();
+</script>

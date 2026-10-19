@@ -85,8 +85,10 @@
         {% for p in range(1, total_pages + 1) %}
           {% if p == page %}
             <span class="active">{{ p }}</span>
-          {% else %}
+          {% elif p == 1 or p == total_pages or (p - page)|abs <= 2 %}
             <a href="#" hx-get="/admin/submissions?page={{ p }}&search={{ search | urlencode }}&form_slug={{ form_slug | urlencode }}" hx-target="#submissions-table">{{ p }}</a>
+          {% elif (p - page)|abs == 3 %}
+            <span class="gap">…</span>
           {% endif %}
         {% endfor %}
         {% if page < total_pages %}

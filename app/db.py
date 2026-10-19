@@ -72,6 +72,18 @@ async def init_db(pool: Optional[asyncpg.Pool]):
             CREATE INDEX IF NOT EXISTS idx_submissions_is_read ON submissions(is_read);
         """)
 
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS analytics_charts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                form_slug VARCHAR(100) NOT NULL DEFAULT '',
+                config JSONB NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+        """)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_analytics_charts_form_slug ON analytics_charts(form_slug);
+        """)
+
         existing = await conn.fetchrow("SELECT id FROM forms WHERE slug = 'contact'")
         if not existing:
             default_fields = [

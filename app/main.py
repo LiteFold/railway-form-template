@@ -13,10 +13,12 @@ from app.templates_ import TemplateResponse
 from starlette.middleware.sessions import SessionMiddleware
 from app import db as db_module
 from app.admin import router as admin_router
+from app.analytics import router as analytics_router
 from app.captcha import generate_pow_challenge, verify_captcha
 from app.config import settings
 from app.email_ import send_notification
 from app.forms import get_form_by_slug, get_forms
+from app.geo import resolve_country
 from app.rate_limit import check_rate_limit, ensure_rate_limit_table
 
 FIELD_LIMITS = {"text": 500, "email": 254, "tel": 20, "url": 2000}
@@ -65,6 +67,7 @@ app.add_middleware(
     same_site="lax",
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.include_router(analytics_router, prefix="/admin/analytics")
 app.include_router(admin_router, prefix="/admin")
 @app.get("/", response_class=HTMLResponse)
 async def embed_snippet(request: Request):
@@ -255,6 +258,7 @@ async def submit_form(request: Request, slug: str):
         "ip": ip,
         "user_agent": request.headers.get("user-agent", ""),
         "referer": request.headers.get("referer", ""),
+        "country": resolve_country(request),
     }
     async with pool.acquire() as conn:
         await conn.execute(
