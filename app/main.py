@@ -1,3 +1,4 @@
+import asyncio
 import json
 import secrets
 import uuid
@@ -18,7 +19,7 @@ from app.captcha import generate_pow_challenge, verify_captcha
 from app.config import settings
 from app.email_ import send_notification
 from app.forms import get_form_by_slug, get_forms
-from app.geo import resolve_country
+from app.geo import ensure_geoip_db, resolve_country
 from app.rate_limit import check_rate_limit, ensure_rate_limit_table
 
 FIELD_LIMITS = {"text": 500, "email": 254, "tel": 20, "url": 2000}
@@ -37,7 +38,10 @@ async def lifespan(app: FastAPI):
         await db_module.init_db(pool)
         if settings.rate_limit_backend == "db":
             await ensure_rate_limit_table(pool)
+    # Railway adds no country header, so fetch an offline IP→country DB in the background.
+    geoip_task = asyncio.create_task(asyncio.to_thread(ensure_geoip_db))
     yield
+    geoip_task.cancel()
     if pool:
         await pool.close()
 app = FastAPI(

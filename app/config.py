@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     rate_limit_backend: str = "memory"
     session_secret_key: Optional[str] = None
     geoip_db_path: Optional[str] = None
+    geoip_auto_download: bool = True
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
