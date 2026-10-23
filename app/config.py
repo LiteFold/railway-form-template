@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     session_secret_key: Optional[str] = None
     geoip_db_path: Optional[str] = None
     geoip_auto_download: bool = True
+    mcp_api_key: Optional[str] = None
+    public_base_url: Optional[str] = None
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

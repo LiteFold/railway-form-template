@@ -464,7 +464,11 @@ async def analytics_data(
     map_field: str = Query("_country"),
 ):
     _require_json_auth(request)
-    pool = _pool(request)
+    return await compute_overview(_pool(request), form, start, end, tz, granularity, map_field)
+
+
+async def compute_overview(pool, form: str = "", start: str = "", end: str = "", tz: str = "UTC",
+                           granularity: str = "auto", map_field: str = "_country") -> dict:
     tzinfo = _tz(tz)
     form_def = await _load_form(pool, form)
     fields_meta = _fields_meta(form_def)
@@ -532,11 +536,17 @@ async def chart_data(request: Request):
     _require_json_auth(request)
     pool = _pool(request)
     body = await _json_body(request)
-    form = str(body.get("form") or "")
-    configs = body.get("configs")
+    charts = await compute_charts(
+        pool, str(body.get("form") or ""), str(body.get("start") or ""),
+        str(body.get("end") or ""), str(body.get("tz") or "UTC"), body.get("configs"),
+    )
+    return {"charts": charts}
+
+
+async def compute_charts(pool, form: str, start: str, end: str, tz: str, configs) -> list[dict]:
     if not isinstance(configs, list) or not configs or len(configs) > 50:
         raise HTTPException(status_code=400, detail="configs must be a non-empty list (max 50)")
-    tzinfo = _tz(str(body.get("tz") or "UTC"))
+    tzinfo = _tz(tz)
     form_def = await _load_form(pool, form)
     fields_meta = _fields_meta(form_def)
     ftypes = {m["key"]: m["type"] for m in fields_meta}
@@ -549,17 +559,15 @@ async def chart_data(request: Request):
             validated.append((None, exc.detail))
 
     async with pool.acquire() as conn:
-        start_d, end_d = await _resolve_range(conn, form, str(body.get("start") or ""), str(body.get("end") or ""), tzinfo)
+        start_d, end_d = await _resolve_range(conn, form, start, end, tzinfo)
         s, e = _utc_bounds(start_d, end_d, tzinfo)
         rows = await _fetch_rows(conn, form, s, e, tzinfo)
 
-    return {
-        "charts": [
-            {"error": err} if cfg is None
-            else {"config": cfg, **build_chart(rows, cfg, start_d, end_d, ftypes, flabels)}
-            for cfg, err in validated
-        ]
-    }
+    return [
+        {"error": err} if cfg is None
+        else {"config": cfg, **build_chart(rows, cfg, start_d, end_d, ftypes, flabels)}
+        for cfg, err in validated
+    ]
 
 
 @router.get("/charts")

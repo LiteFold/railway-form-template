@@ -20,6 +20,7 @@ from app.config import settings
 from app.email_ import send_notification
 from app.forms import get_form_by_slug, get_forms
 from app.geo import ensure_geoip_db, resolve_country
+from app.mcp_server import build_route as build_mcp_route, mcp, set_pool as set_mcp_pool
 from app.rate_limit import check_rate_limit, ensure_rate_limit_table
 
 FIELD_LIMITS = {"text": 500, "email": 254, "tel": 20, "url": 2000}
@@ -40,7 +41,9 @@ async def lifespan(app: FastAPI):
             await ensure_rate_limit_table(pool)
     # Railway adds no country header, so fetch an offline IP→country DB in the background.
     geoip_task = asyncio.create_task(asyncio.to_thread(ensure_geoip_db))
-    yield
+    set_mcp_pool(pool)
+    async with mcp.session_manager.run():
+        yield
     geoip_task.cancel()
     if pool:
         await pool.close()
@@ -71,6 +74,7 @@ app.add_middleware(
     same_site="lax",
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.router.routes.append(build_mcp_route("/mcp"))
 app.include_router(analytics_router, prefix="/admin/analytics")
 app.include_router(admin_router, prefix="/admin")
 @app.get("/", response_class=HTMLResponse)
