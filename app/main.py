@@ -1,10 +1,11 @@
 import asyncio
+import hashlib
+import html
 import json
+import logging
 import secrets
 import uuid
 from contextlib import asynccontextmanager
-from urllib.parse import urljoin
-import httpx
 import re
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,7 @@ from app.captcha import generate_pow_challenge, verify_captcha
 from app.config import settings
 from app.email_ import send_notification
 from app.forms import get_form_by_slug, get_forms
-from app.geo import ensure_geoip_db, resolve_country
+from app.geo import ensure_geoip_db, get_client_ip, resolve_country
 from app.mcp_server import build_route as build_mcp_route, mcp, set_pool as set_mcp_pool
 from app.rate_limit import check_rate_limit, ensure_rate_limit_table
 
@@ -62,16 +63,24 @@ async def enforce_https_scheme(request: Request, call_next):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-secret_key = settings.session_secret_key or secrets.token_hex(32)
+if settings.session_secret_key:
+    secret_key = settings.session_secret_key
+elif settings.admin_password:
+    # Stable across restarts/replicas; rotates with the admin password.
+    secret_key = hashlib.sha256(("session:" + settings.admin_password).encode()).hexdigest()
+else:
+    logging.getLogger(__name__).warning("SESSION_SECRET_KEY and ADMIN_PASSWORD unset; using a random session key")
+    secret_key = secrets.token_hex(32)
 app.add_middleware(
     SessionMiddleware,
     secret_key=secret_key,
     https_only=True,
     same_site="lax",
+    max_age=8 * 3600,
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.router.routes.append(build_mcp_route("/mcp"))
@@ -133,7 +142,7 @@ async def submit_form(request: Request, slug: str):
         if _wants_html(request):
             return HTMLResponse(status_code=404, content='<div style="background:#fee2e2;border:1px solid #ef4444;color:#991b1b;padding:12px 16px;border-radius:6px">Form not found</div>')
         raise HTTPException(status_code=404, detail="Form not found")
-    ip = request.client.host if request.client else "unknown"
+    ip = get_client_ip(request)
     allowed = await check_rate_limit(pool, ip)
     if not allowed:
         raise HTTPException(
@@ -251,7 +260,7 @@ async def submit_form(request: Request, slug: str):
     captcha_ok, captcha_err = await verify_captcha(request, data, form_def.get("cap_site_secret"))
     if not captcha_ok:
         if _wants_html(request):
-            msg = captcha_err or "CAPTCHA verification failed"
+            msg = html.escape(captcha_err or "CAPTCHA verification failed")
             html = '<div style="background:#fee2e2;border:1px solid #ef4444;color:#991b1b;padding:12px 16px;border-radius:6px;margin-bottom:16px">' + msg + '</div>'
             return HTMLResponse(status_code=200, content=html)
         raise HTTPException(status_code=400, detail=captcha_err or "CAPTCHA failed")
@@ -283,7 +292,7 @@ async def submit_form(request: Request, slug: str):
             from fastapi.responses import RedirectResponse
             return RedirectResponse(url=redirect, status_code=302)
 
-        success_msg = form_def.get("post_submit_message") or "Thank you! Your submission was received."
+        success_msg = html.escape(form_def.get("post_submit_message") or "Thank you! Your submission was received.")
 
         if request.headers.get("HX-Request") == "true":
             # HTMX: return fragment for inline swap
@@ -363,25 +372,4 @@ async def submit_form(request: Request, slug: str):
     )
 @app.get("/pow-challenge")
 async def pow_challenge(difficulty: int = 4):
-    challenge = generate_pow_challenge(difficulty)
-    return challenge
-
-
-@app.api_route("/cap-proxy/{path:path}", methods=["GET", "POST", "OPTIONS", "HEAD"])
-async def cap_proxy(path: str, request: Request):
-    """Proxy requests to the Cap CAPTCHA service, adding CORS headers."""
-    if not settings.cap_endpoint:
-        return JSONResponse(status_code=503, content={"error": "CAP endpoint not configured"})
-    target_url = urljoin(settings.cap_endpoint.rstrip("/") + "/", path)
-    async with httpx.AsyncClient() as client:
-        resp = await client.request(
-            method=request.method,
-            url=target_url,
-            content=await request.body(),
-            headers={k: v for k, v in request.headers.items()
-                     if k.lower() not in ("host", "content-length", "transfer-encoding", "connection")},
-            params=request.query_params,
-        )
-    excluded = {"content-encoding", "content-length", "transfer-encoding", "connection"}
-    headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded}
-    return Response(content=resp.content, status_code=resp.status_code, headers=headers)
+    return generate_pow_challenge(max(1, min(difficulty, 4)))

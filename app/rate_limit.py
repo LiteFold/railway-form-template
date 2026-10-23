@@ -41,13 +41,13 @@ async def ensure_rate_limit_table(pool: asyncpg.Pool):
 async def check_rate_limit_db(pool: asyncpg.Pool, ip: str, prefix: str = "ratelimit:") -> bool:
     max_requests = settings.rate_limit
     async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            "SELECT count FROM rate_limits WHERE ip = $1 "
-            "AND window_start > NOW() - INTERVAL '1 hour' "
-            "ORDER BY window_start DESC LIMIT 1",
+        await conn.execute("DELETE FROM rate_limits WHERE window_start < NOW() - INTERVAL '1 hour'")
+        used = await conn.fetchval(
+            "SELECT COALESCE(SUM(count), 0) FROM rate_limits WHERE ip = $1 "
+            "AND window_start > NOW() - INTERVAL '1 hour'",
             prefix + ip,
         )
-        if row and row["count"] >= max_requests:
+        if used >= max_requests:
             return False
 
         await conn.execute(

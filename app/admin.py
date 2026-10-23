@@ -1,4 +1,5 @@
 import csv
+import hmac
 import io
 from datetime import datetime, timezone
 
@@ -12,6 +13,7 @@ from app.templates_ import TemplateResponse
 import asyncpg
 from app.config import settings
 from app.forms import create_form, delete_form, get_form, get_form_by_slug, get_forms, update_form
+from app.geo import get_client_ip
 from app.rate_limit import check_rate_limit
 
 router = APIRouter()
@@ -21,8 +23,6 @@ async def require_pool(request: Request):
     pool = request.app.state.pool
     if pool is None:
         warning = request.session.pop("warning", None)
-        if warning is None and settings.admin_password is None:
-            warning = "ADMIN_PASSWORD not set — using default auth"
         return await TemplateResponse(
             "admin_dashboard.html",
             {
@@ -56,22 +56,24 @@ async def login_page(request: Request):
 @router.post("/login")
 async def login(request: Request, password: str = Form(...)):
     pool = request.app.state.pool
-    ip = request.client.host if request.client else "unknown"
+    ip = get_client_ip(request)
+
+    if not settings.admin_password:
+        return await TemplateResponse(
+            "admin_login.html",
+            {"request": request, "error": "Admin login disabled: set ADMIN_PASSWORD"},
+            status_code=503,
+        )
 
     # Rate limit login attempts
-    if pool:
-        allowed = await check_rate_limit(pool, ip, prefix="login:")
-        if not allowed:
-            return await TemplateResponse(
-                "admin_login.html",
-                {"request": request, "error": "Too many login attempts. Try again later."},
-            )
+    allowed = await check_rate_limit(pool, ip, prefix="login:")
+    if not allowed:
+        return await TemplateResponse(
+            "admin_login.html",
+            {"request": request, "error": "Too many login attempts. Try again later."},
+        )
 
-    if settings.admin_password is None:
-        request.session["authenticated"] = True
-        request.session["warning"] = "ADMIN_PASSWORD not set — using default auth"
-        return RedirectResponse(url="/admin", status_code=302)
-    if password == settings.admin_password:
+    if hmac.compare_digest(password.encode(), settings.admin_password.encode()):
         request.session["authenticated"] = True
         return RedirectResponse(url="/admin", status_code=302)
     return await TemplateResponse(
@@ -104,8 +106,6 @@ async def dashboard(request: Request):
     total_pages = max(1, (total + 19) // 20)
 
     warning = request.session.pop("warning", None)
-    if warning is None and settings.admin_password is None:
-        warning = "ADMIN_PASSWORD not set — using default auth"
 
     return await TemplateResponse(
         "admin_dashboard.html",
@@ -186,7 +186,7 @@ async def submissions_list(
     )
 
 
-@router.get("/submission/{sub_id}/toggle")
+@router.post("/submission/{sub_id}/toggle")
 async def toggle_read(request: Request, sub_id: str):
     auth_required(request)
     # Validate UUID format

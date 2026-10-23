@@ -232,6 +232,7 @@
     return -1;
   }
 
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function render() {
       var html = '';
       for (var i = 0; i < fields.length; i++) {
@@ -241,7 +242,7 @@
         var optsHtml = '';
         if (type === 'select') {
           var vals = (f.options || []).join(', ');
-          optsHtml = '<div class="field-group field-group-full"><label class="field-group-label">Options</label><input type="text" class="field-options-input" value="' + vals.replace(/"/g, '&quot;') + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options"></div>';
+          optsHtml = '<div class="field-group field-group-full"><label class="field-group-label">Options</label><input type="text" class="field-options-input" value="' + esc(vals) + '" placeholder="comma-separated options" data-field-idx="' + i + '" data-field-key="options"></div>';
         }
 
         html += '<div class="field-card" data-field-idx="' + i + '">';
@@ -257,7 +258,7 @@
         html += '</div>';
         // Card body: Label/Type, optional Options, Placeholder/Required
         html += '<div class="field-card-grid">';
-        html += '<div class="field-group"><label class="field-group-label">Label</label><input type="text" value="' + (f.label||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="label"></div>';
+        html += '<div class="field-group"><label class="field-group-label">Label</label><input type="text" value="' + esc(f.label) + '" data-field-idx="' + i + '" data-field-key="label"></div>';
         html += '<div class="field-group"><label class="field-group-label">Type</label><select data-field-idx="' + i + '" data-field-key="type">';
         var types = ['text','email','textarea','select','checkbox','tel','number','url'];
         for (var t = 0; t < types.length; t++) {
@@ -265,7 +266,7 @@
         }
         html += '</select></div>';
         if (optsHtml) html += optsHtml;
-        html += '<div class="field-group"><label class="field-group-label">Placeholder</label><input type="text" value="' + (f.placeholder||'').replace(/"/g,'&quot;') + '" data-field-idx="' + i + '" data-field-key="placeholder"></div>';
+        html += '<div class="field-group"><label class="field-group-label">Placeholder</label><input type="text" value="' + esc(f.placeholder) + '" data-field-idx="' + i + '" data-field-key="placeholder"></div>';
         html += '<div class="field-group"><label class="field-group-label">&nbsp;</label><label class="required-chip"><input type="checkbox"' + (f.required ? ' checked' : '') + ' data-field-idx="' + i + '" data-field-key="required"> Required</label></div>';
         html += '</div>';
         html += '</div>';

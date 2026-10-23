@@ -87,6 +87,15 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else ""
 
 
+def get_client_ip(request: Request) -> str:
+    """Real client IP. Forwarded headers are only trusted behind Railway's proxy."""
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
+        ip = client_ip(request)
+        if ip:
+            return ip
+    return request.client.host if request.client else "unknown"
+
+
 def _get_reader():
     global _reader, _reader_loaded
     if not _reader_loaded:

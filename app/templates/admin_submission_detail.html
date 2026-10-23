@@ -9,7 +9,7 @@
     <a href="/admin" class="btn btn-ghost" hx-get="/admin" hx-target="main.content" hx-push-url="true">&larr; Back</a>
     <button
       class="btn btn-ghost"
-      hx-get="/admin/submission/{{ submission_detail['id'] }}/toggle"
+      hx-post="/admin/submission/{{ submission_detail['id'] }}/toggle"
       hx-target="main.content"
     >
       {{ 'Mark read' if not submission_detail['is_read'] else 'Mark unread' }}

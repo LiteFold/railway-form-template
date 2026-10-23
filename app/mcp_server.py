@@ -1,7 +1,9 @@
 import hmac
 import os
 import re
+import time
 import uuid
+from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from typing import Annotated, Any, Literal, Optional
 
@@ -440,6 +442,11 @@ async def build_chart(
 
 # ---------- HTTP mounting ----------
 
+MAX_FAILS = 10
+FAIL_WINDOW = 15 * 60
+_failed_auth: dict[str, list[float]] = defaultdict(list)
+
+
 class _ApiKeyAuth:
     def __init__(self, app):
         self.app = app
@@ -452,9 +459,22 @@ class _ApiKeyAuth:
             response = JSONResponse({"error": "MCP server is disabled. Set MCP_API_KEY to enable it."}, status_code=503)
             return await response(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers", [])}
+        ip = scope["client"][0] if scope.get("client") else "unknown"
+        if os.environ.get("RAILWAY_ENVIRONMENT"):
+            ip = (headers.get("x-real-ip") or headers.get("x-forwarded-for", "").split(",")[0]).strip() or ip
+        now = time.time()
+        fails = [t for t in _failed_auth[ip] if t > now - FAIL_WINDOW]
+        _failed_auth[ip] = fails
+        if len(fails) >= MAX_FAILS:
+            response = JSONResponse(
+                {"error": "Too many failed attempts"}, status_code=429,
+                headers={"Retry-After": str(FAIL_WINDOW)},
+            )
+            return await response(scope, receive, send)
         auth = headers.get("authorization", "")
         token = auth[7:].strip() if auth.lower().startswith("bearer ") else headers.get("x-api-key", "")
         if not hmac.compare_digest(token.encode(), expected.encode()):
+            fails.append(now)
             response = JSONResponse(
                 {"error": "Invalid or missing API key"}, status_code=401,
                 headers={"WWW-Authenticate": 'Bearer realm="mcp"'},

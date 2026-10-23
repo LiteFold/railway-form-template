@@ -72,10 +72,9 @@ async def verify_captcha(request, data: dict, cap_secret_key: Optional[str] = No
     if mode == "pow":
         secret = data.get("pow_secret", "")
         nonce_str = data.get("pow_nonce", "0")
-        difficulty_str = data.get("pow_difficulty", "4")
+        difficulty = 4  # fixed server-side; never trust the client's value
         try:
             nonce = int(nonce_str)
-            difficulty = int(difficulty_str)
         except (ValueError, TypeError):
             return False, "Invalid PoW parameters"
         ok = _verify_pow(secret, nonce, difficulty)
