@@ -7,21 +7,13 @@
     "value": "${{secret(32)}}",
     "description": "Password to access the admin dashboard at /admin. Auto-generated on deploy. Change it after first login."
   },
-  "CAP_ENDPOINT": {
-    "value": "https://${{cap.RAILWAY_PUBLIC_DOMAIN}}",
-    "description": "Public URL of the sibling 'cap' CAPTCHA service. Auto-wired to this template's Cap service."
-  },
-  "CAP_SECRET_KEY": {
+  "MCP_API_KEY": {
     "value": "${{secret(32)}}",
-    "description": "Shared secret used to verify Cap challenge tokens (HMAC). Auto-generated; must match what Cap issues. Keep in sync with the Cap service if you rotate it."
-  },
-  "CAP_SITE_KEY": {
-    "value": "",
-    "description": "Cap site key passed to the frontend widget. Leave empty unless you created a specific site key in the Cap dashboard."
+    "description": "Secret that unlocks the MCP server at /mcp so AI assistants (Claude, etc.) can create forms and read leads and analytics. Auto-generated on deploy. Send it as 'Authorization: Bearer <key>'. Treat it like a password."
   },
   "CAPTCHA_MODE": {
-    "value": "auto",
-    "description": "CAPTCHA mode: 'auto' (use Cap if CAP_ENDPOINT is reachable, else none), 'cap' (force Cap), or 'none' (disabled)."
+    "value": "honeypot",
+    "description": "Spam protection: 'honeypot' (hidden field that bots fill in; no widget for visitors), 'pow' (proof-of-work challenge), or 'off'. Per-IP rate limiting always applies."
   },
   "FORM_RECIPIENT_EMAIL": {
     "value": "",

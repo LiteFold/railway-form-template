@@ -1,18 +1,18 @@
 ---
 title: Easy Form
-description: Self-hosted contact form with anti-spam (Cap CAPTCHA), PostgreSQL storage, HTMX admin dashboard, and optional email forwarding. Deploy on Railway in one click.
+description: Self-hosted form and lead-capture backend with PostgreSQL storage, analytics, an HTMX admin dashboard, an MCP server for AI assistants, and optional email forwarding. Deploy on Railway in one click.
 tags:
   - fastapi
   - python
   - postgresql
-  - captcha
+  - analytics
   - htmx
-  - valkey
+  - mcp
 ---
 
 # Easy Form
 
-> A self-hosted contact form with Cap CAPTCHA anti-spam and HTMX admin dashboard. Deploy on Railway in one click.
+> A self-hosted form and lead-capture backend with analytics, an HTMX admin dashboard and an MCP server. Two services (app + Postgres). Deploy on Railway in one click.
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.com/deploy/form-cap)
 
@@ -30,53 +30,48 @@ tags:
               ▼
 ┌─────────────────────────────────────────────────┐
 │              Railway (this app)                  │
-│  ┌──────────┐  ┌──────────┐  ┌────────────────┐ │
-│  │  Cap     │──│  FastAPI  │──│   PostgreSQL   │ │
-│  │ CAPTCHA  │  │  Backend  │  │  (asyncpg)     │ │
-│  └────┬─────┘  └──────────┘  └────────────────┘ │
-│       │                                            │
-│  ┌────▼─────┐                                      │
-│  │  Valkey  │                                      │
-│  │ (Redis)  │                                      │
-│  └──────────┘                                      │
-│                    │                            │
-│                    ▼                            │
-│           ┌────────────────┐                    │
-│           │ SendGrid / SMTP│ (optional)         │
-│           └────────────────┘                    │
+│  ┌───────────────────┐    ┌──────────────────┐  │
+│  │  FastAPI backend  │────│   PostgreSQL     │  │
+│  │  forms · admin    │    │   (asyncpg)      │  │
+│  │  analytics · /mcp │    └──────────────────┘  │
+│  └─────────┬─────────┘                          │
+│            ▼                                    │
+│   ┌────────────────┐                            │
+│   │ SendGrid / SMTP│ (optional)                 │
+│   └────────────────┘                            │
 └─────────────────────────────────────────────────┘
-              ▲
-              │ GET /admin
-     ┌────────┴────────┐
-     │  Admin Dashboard │
-     │  (HTMX-powered)  │
-     └─────────────────┘
+        ▲                        ▲
+        │ GET /admin             │ POST /mcp (API key)
+ ┌──────┴───────────┐     ┌──────┴───────────┐
+ │  Admin Dashboard │     │ AI assistant     │
+ │  (HTMX-powered)  │     │ (Claude, etc.)   │
+ └──────────────────┘     └──────────────────┘
 ```
 
 ## What It Does
 
 - **Receive form submissions** from your static site, blog, or any HTML page
-- **Block spam** automatically via Cap (primary), honeypot, and proof-of-work (fallback chain)
+- **Block spam** with an invisible honeypot field and per-IP rate limiting
 - **Store submissions** in PostgreSQL for review
 - **Notify you** via email (SendGrid or SMTP)
 - **Admin dashboard** to view, search, and manage submissions (HTMX-powered, no page reloads)
+- **Analytics** — trends, world map of where people filled in, per-field answer breakdowns and custom charts
+- **MCP server** — let an AI assistant create forms and query leads and analytics
 
 ## Service Architecture
 
-This template uses 4 services — all wired and ready on deploy:
+This template uses 2 services — both wired and ready on deploy:
 
 1. **Form API** — The FastAPI backend (this repository)
-2. **Cap CAPTCHA** — Anti-spam CAPTCHA service from `tiago2/cap`
-3. **PostgreSQL** — Database for submissions and form definitions
-4. **Valkey** — Redis-compatible store for Cap session data (`valkey/valkey:8-alpine`)
+2. **PostgreSQL** — Database for submissions and form definitions
 
-Environment variables are pre-configured with reference variables — `DATABASE_URL`, `REDIS_URL`, `CAP_ENDPOINT`, and `CAP_SECRET_KEY` are all wired automatically.
+`DATABASE_URL` is wired automatically with a reference variable. `ADMIN_PASSWORD`, `SESSION_SECRET_KEY` and `MCP_API_KEY` are generated on deploy.
 
 ## Live Example
 
 See Eary Form in action on a real site: [Contact Page](https://all-that-recipe.blogspot.com/p/contact.html)
 
-This Blogger blog embeds the form with CAPTCHA and accepts submissions live — no page reload, no third-party data sharing.
+This Blogger blog embeds the form and accepts submissions live — no page reload, no third-party data sharing.
 
 ## Prerequisites
 
@@ -102,7 +97,7 @@ After deployment, set these variables in Railway:
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | ✅ | — | Postgres connection string (auto-set by Railway) |
 | `ADMIN_PASSWORD` | ✅ | — | Password for the admin dashboard |
-| `CAPTCHA_MODE` | ❌ | `auto` | Spam protection mode (`auto`, `cap`, `honeypot`, `pow`) |
+| `CAPTCHA_MODE` | ❌ | `auto` (template sets `honeypot`) | Spam protection mode (`honeypot`, `pow`, `off`, `auto`, `cap`) |
 | `FORM_RECIPIENT_EMAIL` | ❌ | — | Where to forward submissions |
 | `SENDGRID_API_KEY` | ❌ | — | SendGrid API key for email |
 | `SMTP_HOST` | ❌ | — | SMTP host (fallback if SendGrid unset) |
@@ -165,15 +160,15 @@ Features:
 
 ## Spam Protection
 
-The app uses a three-layer anti-spam approach:
+No CAPTCHA widget, no extra services:
 
 | Layer | Method | Description |
 |-------|--------|-------------|
-| 1 | **Cap** | Primary CAPTCHA provider. Simple, privacy-friendly alternative to reCAPTCHA. Uses Valkey (Redis-compatible) as its backing session store — included as the 4th service so it works out of the box. |
-| 2 | **Honeypot** | Hidden form field that bots fill in but humans don't see. |
-| 3 | **PoW** | Built-in proof-of-work challenge (SHA-256) as last resort. |
+| 1 | **Honeypot** | Hidden form field that bots fill in but humans don't see. Included in the hosted form and the embed snippet. |
+| 2 | **Rate limit** | Per-IP cap on submissions (`RATE_LIMIT`, default 10). |
+| 3 | **PoW** (optional) | Built-in proof-of-work challenge (SHA-256). Enable with `CAPTCHA_MODE=pow`. |
 
-Set `CAPTCHA_MODE=auto` (default) to try each layer in order. Set it to `cap`, `honeypot`, or `pow` to pin a specific method.
+`CAPTCHA_MODE` accepts `honeypot` (template default), `pow`, `off`, or `auto`. If you run your own Cap server you can still point `CAP_ENDPOINT` / `CAP_SECRET_KEY` at it; it is no longer part of the Railway template.
 
 ## API Reference
 

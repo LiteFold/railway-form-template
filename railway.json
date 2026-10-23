@@ -19,18 +19,6 @@
       }
     },
     {
-      "name": "cap",
-      "source": {
-        "type": "image",
-        "image": "tiago2/cap:latest"
-      },
-      "deploy": {
-        "healthcheckPath": "/",
-        "restartPolicyType": "ON_FAILURE",
-        "restartPolicyMaxRetries": 10
-      }
-    },
-    {
       "name": "postgres",
       "source": {
         "type": "dockerfile",
@@ -45,17 +33,6 @@
             "mountPath": "/var/lib/postgresql"
           }
         ]
-      }
-    },
-    {
-      "name": "valkey",
-      "source": {
-        "type": "image",
-        "image": "valkey/valkey:8-alpine"
-      },
-      "deploy": {
-        "restartPolicyType": "ON_FAILURE",
-        "restartPolicyMaxRetries": 10
       }
     }
   ]

@@ -48,10 +48,13 @@
   &lt;input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.label }}"{% if field.required %} required{% endif %} /&gt;
   {% endif %}
 {% endfor %}
+  &lt;input type="text" name="_hp_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0"&gt;
+{% if settings.cap_endpoint %}
   &lt;script src="https://cdn.jsdelivr.net/npm/cap-widget"&gt;&lt;/script&gt;
   &lt;cap-widget required
     data-cap-api-endpoint="{{ request.base_url }}cap-proxy/{% if settings.cap_site_key %}{{ settings.cap_site_key }}/{% endif %}"&gt;
   &lt;/cap-widget&gt;
+{% endif %}
   &lt;button type="submit"&gt;Send&lt;/button&gt;
 &lt;/form&gt;
 &lt;div id="form-response"&gt;&lt;/div&gt;</pre>
@@ -98,8 +101,13 @@
       }
     }
 
+    function getHoneypotSnippet() {
+      return '  <input type="text" name="_hp_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0">';
+    }
+
     function getCapSnippet(_form) {
-      var siteKey = "{{ settings.cap_site_key }}";
+      if (!{{ 'true' if settings.cap_endpoint else 'false' }}) return '';
+      var siteKey = "{{ settings.cap_site_key or '' }}";
       var endpoint = "{{ request.base_url }}cap-proxy/";
       if (siteKey) {
         endpoint += siteKey + "/";
@@ -182,7 +190,7 @@
       var cap = getCapSnippet(form);
       var validation = getValidationSnippet();
 
-      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + cap + '\n  <button type="submit">Send<\/button>\n<\/form>\n' + validation + '\n<div id="form-response"><\/div>';
+      var htmxHtml = '<form\n  hx-post="' + base + 'form/' + slug + '"\n  hx-target="#form-response"\n  hx-swap="innerHTML"\n  action="' + base + 'form/' + slug + '"\n  method="post"\n>\n' + fieldHtml + '\n' + getHoneypotSnippet() + (cap ? '\n' + cap : '') + '\n  <button type="submit">Send<\/button>\n<\/form>\n' + validation + '\n<div id="form-response"><\/div>';
       document.getElementById('snippet-htmx').textContent = htmxHtml;
     }
 

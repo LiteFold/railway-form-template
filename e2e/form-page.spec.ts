@@ -28,9 +28,9 @@ test.describe('Hosted Form Page', () => {
     await expect(page.locator('.honeypot')).toBeHidden();
   });
 
-  test('has Cap CAPTCHA widget', async ({ page }) => {
+  test('has no CAPTCHA widget (honeypot protection only)', async ({ page }) => {
     await page.goto(BASE + '/form/contact');
-    await expect(page.locator('cap-widget')).toBeVisible();
+    await expect(page.locator('cap-widget')).toHaveCount(0);
   });
 
   test('has form-response target div', async ({ page }) => {

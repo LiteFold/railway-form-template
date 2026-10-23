@@ -1,6 +1,0 @@
-{
-  "VALKEY_ARGS": {
-    "value": "--save 60 1 --maxmemory-policy noeviction",
-    "description": "Valkey server startup arguments. Saves a snapshot every 60s if at least 1 key changed, and refuses eviction under memory pressure so Cap session data is not lost. Leave empty for Valkey defaults."
-  }
-}
